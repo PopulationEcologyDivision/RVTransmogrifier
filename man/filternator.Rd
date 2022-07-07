@@ -4,11 +4,14 @@
 \alias{filternator}
 \title{filternator}
 \usage{
-filternator(tblList = NULL)
+filternator(tblList = NULL, keep_nullsets = T)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that
 should have filtering applied to them.}
+
+\item{keep_nullsets}{the default is \code{T}. This is used to control whether or not the 
+presence/absence of species changes the returned set locations.}
 }
 \value{
 a list of filtered versions of the dataframes passed as \code{tblList}.  If the
@@ -24,6 +27,9 @@ the point where they relate directly to haddock. All remaining GSINF records wou
 caught haddock, all GSCAT records would be limited to haddock, all GSDET records would be limited
 to haddock, etc.  Filtering is not limited to species, but any value that exists in any field in
 any of the tables present in RVSurveyData package.
+}
+\note{
+GSWARPOUT, GSCRUISELIST and GSSPEC can NOT be used to filter the other tables.
 }
 \author{
 Mike McMahon

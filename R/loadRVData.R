@@ -1,4 +1,5 @@
-loadRVData<- function(tbls = allTbls){
+loadRVData<- function(){
+  tbls <- RVSurveyData::listTbls()
   dataEnv<-new.env()
   data(package="RVSurveyData", list = tbls, envir = dataEnv)
   thedata <- as.list(dataEnv)

@@ -37,20 +37,7 @@ extractFGP <- function(survey = NULL, years=NULL, path = NULL ){
                      "4VSW" = -1
     )
 
-    thisList <- loadRVData()
-
-# #     invisible(sapply(allTbls, loadData))
-# # browser()
-#     thisList <- list()
-#     thisList$GSXTYPE   <- RVSurveyData::GSXTYPE
-#     thisList$GSINF     <- RVSurveyData::GSINF
-#     thisList$GSGEAR    <- RVSurveyData::GSGEAR
-#     thisList$GSMATURITY<- RVSurveyData::GSMATURITY
-#     thisList$GSSEX     <- RVSurveyData::GSSEX
-#     thisList$GSMISSIONS<- RVSurveyData::GSMISSIONS
-#     thisList$GSCAT     <- RVSurveyData::GSCAT
-#     thisList$GSDET     <- RVSurveyData::GSDET
-#     thisList$GSSPECIES <- RVSurveyData::GSSPECIES
+    thisList <- loadRVData(env="a")
 
     thisList$GSINF <- thisList$GSINF[thisList$GSINF$TYPE==1,]
     if (!is.null(years)){
