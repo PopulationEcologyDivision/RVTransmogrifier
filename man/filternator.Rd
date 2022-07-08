@@ -4,7 +4,7 @@
 \alias{filternator}
 \title{filternator}
 \usage{
-filternator(tblList = NULL, keep_nullsets = T)
+filternator(tblList = NULL, keep_nullsets = T, ...)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that
