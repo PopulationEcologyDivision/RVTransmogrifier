@@ -1,4 +1,5 @@
 # RVTransmogrifier 
+![](vign/images/transmogrifier_400x400.jpg)
 This package works with the [RVSurveyData package](https://github.com/PopulationEcologyDivision/RVSurveyData) to facilitate querying that data, and also to reformat that data as needed by different partners.
 
 (Yes, [transmogrify is a word](https://calvinandhobbes.fandom.com/wiki/Transmogrifier))

@@ -10,7 +10,7 @@ loadRVData<- function(...){
   debug <- ifelse(is.null(args$debug), F, args$debug) 
   quiet <- ifelse(is.null(args$quiet), F, args$quiet) 
   
-  tbls <- data(package = "RVSurveyData")$results[,"Item"]
+  tbls <- utils::data(package = "RVSurveyData")$results[,"Item"]
   dataEnv<-new.env()
   utils::data(package="RVSurveyData", list = tbls, envir = dataEnv)
   thedata <- as.list(dataEnv)
