@@ -12,6 +12,8 @@ should have filtering applied to them.}
 
 \item{keep_nullsets}{the default is \code{T}. This is used to control whether or not the 
 presence/absence of species changes the returned set locations.}
+
+\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 }
 \value{
 a list of filtered versions of the dataframes passed as \code{tblList}.  If the

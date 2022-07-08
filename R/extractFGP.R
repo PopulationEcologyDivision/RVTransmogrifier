@@ -37,7 +37,7 @@ extractFGP <- function(survey = NULL, years=NULL, path = NULL ){
                      "4VSW" = -1
     )
 
-    thisList <- loadRVData(env="a")
+    thisList <- loadRVData()
 
     thisList$GSINF <- thisList$GSINF[thisList$GSINF$TYPE==1,]
     if (!is.null(years)){
@@ -90,11 +90,11 @@ extractFGP <- function(survey = NULL, years=NULL, path = NULL ){
     # make the shapefile
     Mar.utils::df_to_shp(df=this$GSINF,filename = fn,lat.field = "SLAT",lon.field = "SLONG")
 
-    write.csv(this$GSMISSIONS, file = paste0(fn,"_GSMISSIONS.csv"), row.names = F)
-    write.csv(this$GSINF, file = paste0(fn,"_GSINF.csv"), row.names = F)
-    write.csv(this$GSCAT, file = paste0(fn,"_GSCAT.csv"), row.names = F)
-    write.csv(this$GSDET, file = paste0(fn,"_GSDET.csv"), row.names = F)
-    write.csv(this$GSSPECIES, file = paste0(fn,"_GSSPECIES.csv"), row.names = F)
+    utils::write.csv(this$GSMISSIONS, file = paste0(fn,"_GSMISSIONS.csv"), row.names = F)
+    utils::write.csv(this$GSINF, file = paste0(fn,"_GSINF.csv"), row.names = F)
+    utils::write.csv(this$GSCAT, file = paste0(fn,"_GSCAT.csv"), row.names = F)
+    utils::write.csv(this$GSDET, file = paste0(fn,"_GSDET.csv"), row.names = F)
+    utils::write.csv(this$GSSPECIES, file = paste0(fn,"_GSSPECIES.csv"), row.names = F)
 
   }
 }

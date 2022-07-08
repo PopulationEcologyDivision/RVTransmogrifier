@@ -10,6 +10,7 @@
 #' should have filtering applied to them.
 #' @param keep_nullsets the default is \code{T}. This is used to control whether or not the 
 #' presence/absence of species changes the returned set locations. 
+#' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
 #' @returns a list of filtered versions of the dataframes passed as \code{tblList}.  If the
 #' filtering fails, a value of -1 will be returned.  For example, if data is filtered for a year
 #' where data was not collected, a strata that doesn't exist, or a species that was not observed
