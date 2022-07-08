@@ -4,7 +4,10 @@
 \alias{loadRVData}
 \title{loadRVData}
 \usage{
-loadRVData()
+loadRVData(...)
+}
+\arguments{
+\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 }
 \value{
 a list of the ~18 data frames from the RVSurveyData package
