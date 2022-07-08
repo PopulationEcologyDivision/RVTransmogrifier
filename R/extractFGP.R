@@ -30,30 +30,7 @@ extractFGP <- function(survey = NULL, years=NULL, path = NULL ){
       fn <- paste0(years[1],"_",survey[i],"_",ts)
     }
 
-    months <- switch(survey[i],
-                     "SPRING" = c(1,2,3,4),
-                     "SUMMER" = c(5,6,7,8),
-                     "FALL" = c(9,10,11,12),
-                     "4VSW" = -1
-    )
-
-    thisList <- loadRVData()
-
-    thisList$GSINF <- thisList$GSINF[thisList$GSINF$TYPE==1,]
-    if (!is.null(years)){
-      thisList$GSMISSIONS <- thisList$GSMISSIONS[thisList$GSMISSIONS$YEAR %in% c(years),]
-    }
-    if (survey[i] != "4VSW"){
-      #get rid of 4VSW cod data
-      thisList$GSINF <- thisList$GSINF[-which(thisList$GSINF$STRAT %in% c(396:411)
-                                            & lubridate::month(thisList$GSINF$SDATE) %in% c(1,2,3,4)),]
-      #retain appropriate months
-      thisList$GSINF <- thisList$GSINF[which(lubridate::month(thisList$GSINF$SDATE) %in% months),]
-    }else{
-      thisList$GSINF <- thisList$GSINF[which(thisList$GSINF$STRAT %in% c(396:411)
-                                           & lubridate::month(thisList$GSINF$SDATE) %in% c(1,2,3,4)),]
-    }
-    this <- filternator(thisList)
+    this <- getSurvey(survey=survey[i], years = years)
     if (is.numeric(this))stop("Your query did not return valid results")
 
     # replace gear code with gear desc
