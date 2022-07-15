@@ -4,14 +4,16 @@
 \alias{filternator}
 \title{filternator}
 \usage{
-filternator(tblList = NULL, keep_nullsets = T, ...)
+filternator(tblList = NULL, keep_nullsets = FALSE, ...)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that
 should have filtering applied to them.}
 
-\item{keep_nullsets}{the default is \code{T}. This is used to control whether or not the 
-presence/absence of species changes the returned set locations.}
+\item{keep_nullsets}{the default is \code{FALSE}. This is used to control whether or not the 
+presence/absence of species changes the returned set locations. If \code{FALSE}, the only 
+returned records will be directly linkable to the user-filtered records.  If \code{TRUE}, set 
+locations will still be returned, even if a particular species was not caught there.}
 
 \item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 }
@@ -34,5 +36,5 @@ any of the tables present in RVSurveyData package.
 GSWARPOUT, GSCRUISELIST and GSSPEC can NOT be used to filter the other tables.
 }
 \author{
-Mike McMahon
+Mike McMahon, \email{Mike.McMahon@dfo-mpo.gc.ca}
 }

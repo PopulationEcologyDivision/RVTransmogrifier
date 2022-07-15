@@ -4,7 +4,7 @@
 \alias{extractFGP}
 \title{extractFGP}
 \usage{
-extractFGP(survey = NULL, years = NULL, path = NULL)
+extractFGP(survey = NULL, years = NULL)
 }
 \arguments{
 \item{survey}{the default is \code{NULL}. This specifies which survey should be extracted.  Valid
@@ -14,15 +14,11 @@ generated for all 4 different surveys.}
 \item{years}{the default is \code{NULL}. This paramter allows you to generate datasets for one or
 more specific years.  A value of NULL will result in products being generated for all years for
 which data exists, and a vector of years will result in dataset that include the specified years.}
-
-\item{path}{default is \code{NULL}.  This identifies a location where the resulting products
-should be saved.  A value of NULL will result in products being generated within the current
-working directory.}
 }
 \description{
 This function generates the products (i.e. csvs and shapefiles)used by the FGP
 services related to https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b.
 }
 \author{
-Mike McMahon
+Mike McMahon, \email{Mike.McMahon@dfo-mpo.gc.ca}
 }

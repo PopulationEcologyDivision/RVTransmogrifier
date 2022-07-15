@@ -14,10 +14,13 @@ values are "SPRING", "SUMMER", "FALL", and "4VSW".}
 more specific years.  A value of NULL will result in products being generated for all years for
 which data exists, and a vector of years will result in dataset that include the specified years.}
 
-\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
+\item{...}{other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')}
 }
 \description{
 A survey is a defined by a combination of a range of months, a selection of strata, 
 and a tow 'type'. This function ensures that all those values are combined correctly to get the 
 valid data for a survey.
+}
+\author{
+Mike McMahon, \email{Mike.McMahon@dfo-mpo.gc.ca}
 }

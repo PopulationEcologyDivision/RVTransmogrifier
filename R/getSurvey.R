@@ -7,9 +7,12 @@
 #' @param years the default is \code{NULL}. This parameter allows you to generate datasets for one or
 #' more specific years.  A value of NULL will result in products being generated for all years for
 #' which data exists, and a vector of years will result in dataset that include the specified years.
-#' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
+#' @param ... other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')
+#' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
+#' @export
 getSurvey<-function(survey = NULL, years=NULL, ...){
   args <- list(...)
+  keep_nullsets <- ifelse(is.null(args$keep_nullsets), T, args$keep_nullsets) 
   debug <- ifelse(is.null(args$debug), F, args$debug) 
   quiet <- ifelse(is.null(args$quiet), F, args$quiet) 
   
@@ -38,7 +41,7 @@ getSurvey<-function(survey = NULL, years=NULL, ...){
     thisList$GSINF <- thisList$GSINF[which(thisList$GSINF$STRAT %in% c(396:411)
                                            & lubridate::month(thisList$GSINF$SDATE) %in% c(1,2,3,4)),]
   }
-  res <- filternator(thisList)
+  res <- propagateChanges(thisList, keep_nullsets=keep_nullsets)
   if (is.numeric(res))stop("Your query did not return valid results")
   return(res)
 }

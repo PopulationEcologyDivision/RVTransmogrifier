@@ -4,18 +4,14 @@
 #' @param survey the default is \code{NULL}. This specifies which survey should be extracted.  Valid
 #' values are "SPRING", "SUMMER", "FALL", and "4VSW".  A value of NULL will result in products being
 #' generated for all 4 different surveys.
-#' @param years the default is \code{NULL}. This paramter allows you to generate datasets for one or
+#' @param years the default is \code{NULL}. This parameter allows you to generate datasets for one or
 #' more specific years.  A value of NULL will result in products being generated for all years for
 #' which data exists, and a vector of years will result in dataset that include the specified years.
-#' @param path default is \code{NULL}.  This identifies a location where the resulting products
-#' should be saved.  A value of NULL will result in products being generated within the current
-#' working directory.
-#' @author Mike McMahon
+#' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-extractFGP <- function(survey = NULL, years=NULL, path = NULL ){
+extractFGP <- function(survey = NULL, years=NULL){
   ts <-  format(Sys.time(), "%Y")
   thisEnv = new.env()
-  if (!is.null(path))setwd(path)
 
   if (is.null(survey)){
     survey <- c("SPRING", "SUMMER", "FALL", "4VSW")
@@ -75,10 +71,3 @@ extractFGP <- function(survey = NULL, years=NULL, path = NULL ){
 
   }
 }
-
-# extractFGP("SPRING")
-# extractFGP("SUMMER")
-# extractFGP("FALL")
-# extractFGP("4VSW")
-# tt <- extractFGP(survey = NULL, )
-

@@ -17,5 +17,5 @@ This function loads all of the tables from the RVSurveyData package into a singl
 list.
 }
 \author{
-Mike McMahon
+Mike McMahon, \email{Mike.McMahon@dfo-mpo.gc.ca}
 }

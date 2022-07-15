@@ -3,7 +3,7 @@
 #' list.
 #' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
 #' @returns a list of the ~18 data frames from the RVSurveyData package
-#' @author Mike McMahon
+#' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
 loadRVData<- function(...){
   args <- list(...)

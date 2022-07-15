@@ -1,24 +1,26 @@
-#' @title filternator
+#' @title propagateChanges
 #' @description This function is used to ensure that filtering of a single RV data object cascades
 #' to all of the other known RV data objects.  For example, if GSSPECIES is filtered to only
-#' "haddock", and \code{filternator} is run, then all of the various RV tables will be filtered to
+#' "haddock", and \code{propagateChanges} is run, then all of the various RV tables will be filtered to
 #' the point where they relate directly to haddock. All remaining GSINF records would be sets that
 #' caught haddock, all GSCAT records would be limited to haddock, all GSDET records would be limited
 #' to haddock, etc.  Filtering is not limited to species, but any value that exists in any field in
 #' any of the tables present in RVSurveyData package.
 #' @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes that
 #' should have filtering applied to them.
-#' @param keep_nullsets the default is \code{T}. This is used to control whether or not the 
-#' presence/absence of species changes the returned set locations. 
+#' @param keep_nullsets the default is \code{FALSE}. This is used to control whether or not the 
+#' presence/absence of species changes the returned set locations. If \code{FALSE}, the only 
+#' returned records will be directly linkable to the user-filtered records.  If \code{TRUE}, set 
+#' locations will still be returned, even if a particular species was not caught there.
 #' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
 #' @returns a list of filtered versions of the dataframes passed as \code{tblList}.  If the
 #' filtering fails, a value of -1 will be returned.  For example, if data is filtered for a year
 #' where data was not collected, a strata that doesn't exist, or a species that was not observed
 #' would all result in a value of -1 being returned.
-#' @author Mike McMahon
+#' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @note GSWARPOUT, GSCRUISELIST and GSSPEC can NOT be used to filter the other tables.
 #' @export
-filternator<-function(tblList = NULL, keep_nullsets=T, ...){
+propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
   args <- list(...)
   debug <- ifelse(is.null(args$debug), F, args$debug) 
   quiet <- ifelse(is.null(args$quiet), F, args$quiet) 

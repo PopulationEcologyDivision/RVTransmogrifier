@@ -2,4 +2,6 @@
 
 export(extractFGP)
 export(filternator)
+export(getSurvey)
 export(loadRVData)
+export(rvPlot)
