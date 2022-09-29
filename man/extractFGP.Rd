@@ -11,7 +11,7 @@ extractFGP(survey = NULL, years = NULL)
 values are "SPRING", "SUMMER", "FALL", and "4VSW".  A value of NULL will result in products being
 generated for all 4 different surveys.}
 
-\item{years}{the default is \code{NULL}. This paramter allows you to generate datasets for one or
+\item{years}{the default is \code{NULL}. This parameter allows you to generate datasets for one or
 more specific years.  A value of NULL will result in products being generated for all years for
 which data exists, and a vector of years will result in dataset that include the specified years.}
 }

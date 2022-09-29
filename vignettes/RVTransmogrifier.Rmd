@@ -6,8 +6,8 @@ author: "Mike McMahon"
 email: "Mike.McMahon@dfo-mpo.gc.ca"
 affiliation: "Population Ecology Division - Fisheries and Oceans Canada"
 output: 
-  rmarkdown::html_vignette: default
-  rmarkdown::pdf_document: 
+    rmarkdown::html_vignette: default
+    rmarkdown::pdf_document: 
     engine: pdfLaTeX
   
 vignette: >
@@ -21,13 +21,28 @@ vignette: >
 ---
 ```{r load-packages, include=FALSE}
   if (!require(dplyr)) install.packages('dplyr')  
-  if (!require(ggplot2)) install.packages('ggplot2')  
+  if (!require(ggplot2)) install.packages('ggplot2') 
+  # if (!require(lubridate)) install.packages('lubridate)')
+  # if (!require(Mar.utils)) install.packages('Mar.utils)')
+  # if (!require(tidyr)) install.packages('tidyr)')
+  # if (!require(readr)) install.packages('readr')
+  # if (!require(RVSurveyData)) install.packages('RVSurveyData')
+  # if (!require(stats)) install.packages('stats')
+  # if (!require(stringr)) install.packages('stringr)')
   if (!require(mapdata)) install.packages('mapdata')  
-  if (!require(sf)) install.packages('sf')  
-library(RVSurveyData)
+  # if (!require(marmap)) install.packages('marmap')  
+
 library(dplyr)
 library(ggplot2)
+# library(lubridate)
+# library(Mar.utils)
+# library(tidyr)
+# library(readr)
+library(RVSurveyData)
+# library(stats)
+# library(stringr)
 library(mapdata)
+# library(marmap)
 
 ```
 (<img src="transmogrifier_400x400.jpg" width="200" height="200" />)[https://calvinandhobbes.fandom.com/wiki/Transmogrifier]
@@ -108,8 +123,8 @@ nrow(data$GSCAT)
 At this point, every table within the `data` object will only hold information directly relevant to the filters we applied.  The various tables will only hold records that can be directly linked to cod caught in the summers of 2014 and 2015.  Tables that exist but were not explicitly filtered have also be filtered.  For example, even the table that holds length, weight and age information for specific fish (i.e. `GSDET`) can now be plotted, and we can be confident it will only contain cod data:
 
 ```{r eval=FALSE}
-plot(data$GSDET$FLEN, data$GSDET$FWT, pch = 19, col=factor(data$GSDET$MISSION))
-legend("topleft", pch = 19, legend = unique(factor(data$GSDET$MISSION)), col = unique(factor(data$GSDET$MISSION)))
+plot(data$dataLF$FLEN, data$dataLF$FWT, pch = 19, col=factor(data$dataLF$MISSION))
+legend("topleft", pch = 19, legend = unique(factor(data$dataLF$MISSION)), col = unique(factor(data$GSDET$MISSION)))
 ```
 <img src="cod_summ_2014_2015.png" width="400" />
 
@@ -172,12 +187,12 @@ which yields:
 
 Note how "nullsets" are present, and displayed as "+" symbols.
 ### WoRMS Aphia IDs
-With the addition of [WoRMS aphiaids](https://www.marinespecies.org/about.php) to the new species tables (i.e. GSSPECIES_20220624 and GSSPECIES_TAX, it is now possible to filter data at any taxonomic level rather than just discrete species.  
+With the addition of [WoRMS aphiaids](https://www.marinespecies.org/about.php) to the species table (i.e. GSSPECIES, it is now possible to filter data at any taxonomic level rather than just discrete species.  
 
 For example, to generate a dataset of only data for polychaetes, one could do the following
 ```{r eval=FALSE}
 data<-loadRVData()
-data$GSSPECIES_TAX<- data$GSSPECIES_TAX[which(data$GSSPECIES_TAX$CLASS == "POLYCHAETA"),]
+data$GSSPECIES<- data$GSSPECIES[which(data$GSSPECIES$CLASS == "POLYCHAETA"),]
 data <- propagateChanges(data, keep_nullsets = F)
 #Review contents of data$GSSPECIES element following filtering
 > unique(data$GSSPECIES$SPEC)

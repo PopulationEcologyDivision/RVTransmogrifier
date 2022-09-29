@@ -18,7 +18,6 @@ extractFGP <- function(survey = NULL, years=NULL){
   }else{
     survey <- toupper(survey)
   }
-
   for (i in 1:length(survey)){
     if (is.null(years)){
       fn <- paste0(survey[i],"_",ts)
@@ -34,18 +33,18 @@ extractFGP <- function(survey = NULL, years=NULL){
     this$GSINF$GEAR <- NULL
 
     # replace maturity code with maturity desc
-    this$GSDET <- merge(this$GSDET, this$GSMATURITY, all.x = T, by.x="FMAT", by.y="CODE")
-    colnames(this$GSDET)[colnames(this$GSDET)=="DESCRIPTION"] <- "MATURITY"
+    this$dataDETS <- merge(this$dataDETS, this$GSMATURITY, all.x = T, by.x="FMAT", by.y="CODE")
+    colnames(this$dataDETS)[colnames(this$dataDETS)=="DESCRIPTION"] <- "MATURITY"
 
     # replace sex code with sex desc
-    this$GSDET <- merge(this$GSDET, this$GSSEX, all.x = T, by.x="FSEX", by.y="CODE")
-    colnames(this$GSDET)[colnames(this$GSDET)=="DESCRIPTION"] <- "SEX"
+    this$dataDETS <- merge(this$dataDETS, this$GSSEX, all.x = T, by.x="FSEX", by.y="CODE")
+    colnames(this$dataDETS)[colnames(this$dataDETS)=="DESCRIPTION"] <- "SEX"
 
     # indicate and retain only desired fields
     this$GSMISSIONS <- this$GSMISSIONS[,c("MISSION", 	"VESEL",	"CRUNO",	"YEAR",	"SEASON")]
     this$GSINF      <- this$GSINF[,c("MISSION",	"SETNO",	"SDATE",	"TIME", "STRAT",	"SLAT_DD",	"SLONG_DD",	"ELAT_DD",	"ELONG_DD",	"DUR",	"DIST",	"SPEED",	"DEPTH_M",	"SURFACE_TEMPERATURE",	"BOTTOM_TEMPERATURE",	"BOTTOM_SALINITY", "GEARDESC")]
     this$GSCAT      <- this$GSCAT[,c("MISSION",	"SETNO",	"SPEC",	"TOTWGT",	"TOTNO")]
-    this$GSDET      <- this$GSDET[,c("MISSION",	"SETNO",	"SPEC",	"FLEN",	"FWT", "MATURITY",	"SEX", "AGE",	"SPECIMEN_ID")]
+    this$dataDETS      <- this$dataDETS[,c("MISSION",	"SETNO",	"SPEC",	"FLEN",	"FWT", "MATURITY",	"SEX", "AGE",	"SPECIMEN_ID")]
     this$GSSPECIES  <- this$GSSPECIES[,c("SPEC",	"COMM",	"CODE",	"TSN")]
 
     # drop time from date

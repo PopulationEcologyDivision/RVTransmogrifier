@@ -8,6 +8,8 @@
 #' more specific years.  A value of NULL will result in products being generated for all years for
 #' which data exists, and a vector of years will result in dataset that include the specified years.
 #' @param ... other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')
+#' @returns a list of dataframes which have been filtered to only include data related to the 
+#' specified survey and years
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
 getSurvey<-function(survey = NULL, years=NULL, ...){
@@ -41,7 +43,7 @@ getSurvey<-function(survey = NULL, years=NULL, ...){
     thisList$GSINF <- thisList$GSINF[which(thisList$GSINF$STRAT %in% c(396:411)
                                            & lubridate::month(thisList$GSINF$SDATE) %in% c(1,2,3,4)),]
   }
-  res <- propagateChanges(thisList, keep_nullsets=keep_nullsets)
+  res <- propagateChanges(thisList, keep_nullsets=keep_nullsets, quiet=T)
   if (is.numeric(res))stop("Your query did not return valid results")
   return(res)
 }

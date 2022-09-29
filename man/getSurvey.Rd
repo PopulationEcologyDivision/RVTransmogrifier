@@ -16,6 +16,10 @@ which data exists, and a vector of years will result in dataset that include the
 
 \item{...}{other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')}
 }
+\value{
+a list of dataframes which have been filtered to only include data related to the 
+specified survey and years
+}
 \description{
 A survey is a defined by a combination of a range of months, a selection of strata, 
 and a tow 'type'. This function ensures that all those values are combined correctly to get the 
