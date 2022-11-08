@@ -25,12 +25,6 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
   debug <- ifelse(is.null(args$debug), F, args$debug) 
   quiet <- ifelse(is.null(args$quiet), F, args$quiet) 
   
-  # knownObj <- c(""GSSEX", "GSFORCE", "strataMar_sf", "GSINF", "GSSPECIES", 
-  # "GSMISSIONS", "dataDETS", "GSSTRATUM", "GSMATURITY", "GSCAT", "GSWARPOUT", 
-  # "GSSPEC", "GSHOWOBT", "dataLF", "nafo_sf", "GSXTYPE", "GSGEAR", "GSCURNT", 
-  # "strataMar4VSW_sf", "GSAUX")
-  # reqdObjs <- c("GSINF","GSCAT","GSDET")
-  
   LOOPAGAIN <- T
   initcnt <- sum(sapply(tblList, NROW))
   if (!quiet) message("filtering")
@@ -46,7 +40,6 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
         if (!quiet)message("No sets remain - quitting")
         return(-1)
       }
-      
       #these are limited by GSINF
       if ("GSXTYPE" %in% names(tblList)) tblList$GSXTYPE <- tblList$GSXTYPE[which(tblList$GSXTYPE$XTYPE %in% tblList$GSINF$TYPE),]
       if ("GSCURNT" %in% names(tblList)) tblList$GSCURNT <- tblList$GSCURNT[which(tblList$GSCURNT$CURNT %in% tblList$GSINF$CURNT),]
@@ -54,7 +47,6 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
       if ("GSHOWOBT" %in% names(tblList)) tblList$GSHOWOBT <- tblList$GSHOWOBT[which(tblList$GSHOWOBT$HOWOBT %in% c(tblList$GSINF$HOWD,tblList$GSINF$HOWS)) ,]
       if ("GSXTYPE" %in% names(tblList)) tblList$GSAUX <- tblList$GSAUX[which(tblList$GSAUX$AUX %in% tblList$GSINF$AUX),]
       if ("GSSTRATUM" %in% names(tblList)) tblList$GSSTRATUM <- tblList$GSSTRATUM[which(tblList$GSSTRATUM$STRAT %in% tblList$GSINF$STRAT),]
-      
       if ("GSCRUISELIST" %in% names(tblList)) tblList$GSCRUISELIST <- tblList$GSCRUISELIST[which(tblList$GSCRUISELIST$MISSION %in% tblList$GSINF$MISSION),]
       if ("GSGEAR" %in% names(tblList)) tblList$GSGEAR <- tblList$GSGEAR[which(tblList$GSGEAR$GEAR %in% tblList$GSINF$GEAR),]
       if ("GSMISSIONS" %in% names(tblList)) tblList$GSMISSIONS <- tblList$GSMISSIONS[which(tblList$GSMISSIONS$MISSION %in% tblList$GSINF$MISSION),]
@@ -68,7 +60,6 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
       if ("GSINF" %in% names(tblList)) tblList$GSCAT <- tblList$GSCAT[which(paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO) %in% 
                                                                               paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO)) ,]
       if ("GSSPECIES" %in% names(tblList)) tblList$GSCAT <- tblList$GSCAT[which(tblList$GSCAT$SPEC %in% tblList$GSSPECIES$CODE) ,]
-      
       if (nrow(tblList$GSCAT)==0){
         if (!quiet)message("No catch records remain - quitting")
         return(-1)
@@ -78,6 +69,15 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
                                                                                        paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO,"_",tblList$GSCAT$SPEC)) ,]
       if ("dataLF" %in% names(tblList)) tblList$dataLF <- tblList$dataLF[which(paste0(tblList$dataLF$MISSION,"_",tblList$dataLF$SETNO,"_",tblList$dataLF$SPEC) %in% 
                                                                                  paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO,"_",tblList$GSCAT$SPEC)) ,]
+      
+      if(any(c("GSCAT_agg","dataLF_agg")%in% names(tblList)) & ("GSCAT" %in% names(tblList) & "GSSPECIES" %in% names(tblList))){
+        tmp <- unique(merge(tblList$GSCAT[,c("MISSION", "SETNO","SPEC")], tblList$GSSPECIES[,c("CODE", "TAXA_","TAXARANK_")], by.x="SPEC", by.y="CODE"))
+        tmp$SPEC <- NULL
+        tblList$GSCAT_agg <- tblList$GSCAT_agg[which(paste0(tblList$GSCAT_agg$MISSION,"_",tblList$GSCAT_agg$SETNO,"_",tblList$GSCAT_agg$TAXA_,"_",tblList$GSCAT_agg$TAXARANK_) %in% 
+                                                       paste0(tmp$MISSION,"_",tmp$SETNO,"_",tmp$TAXA_,"_",tmp$TAXARANK_)) ,]
+        tblList$dataLF_agg <- tblList$dataLF_agg[which(paste0(tblList$dataLF_agg$MISSION,"_",tblList$dataLF_agg$SETNO,"_",tblList$dataLF_agg$TAXA_,"_",tblList$dataLF_agg$TAXARANK_) %in% 
+                                                         paste0(tmp$MISSION,"_",tmp$SETNO,"_",tmp$TAXA_,"_",tmp$TAXARANK_)) ,]
+      }
     }
     
     if ("dataDETS" %in% names(tblList)){
@@ -86,7 +86,6 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
                                                                                     paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO,"_",tblList$GSCAT$SPEC)) ,]
       if (!keep_nullsets & "GSINF" %in% names(tblList)) tblList$dataDETS <- tblList$dataDETS[which(paste0(tblList$dataDETS$MISSION,"_",tblList$dataDETS$SETNO) %in% 
                                                                                                      paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO)) ,]
-      
       #these are limited by dataDETS
       if ("GSMATURITY" %in% names(tblList)) tblList$GSMATURITY <- tblList$GSMATURITY[which(tblList$GSMATURITY$CODE %in% tblList$dataDETS$FMAT),]
       if ("GSSEX" %in% names(tblList)) tblList$GSSEX <- tblList$GSSEX[which(tblList$GSSEX$CODE %in% tblList$dataDETS$FSEX),]
@@ -122,6 +121,5 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
       if (!quiet) print(sapply(tblList, NROW))
     }
   }
-  
   return(tblList)
 }

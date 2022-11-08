@@ -14,7 +14,7 @@ extractOBIS_Events(survey = NULL, years = NULL, ...)
 \item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 }
 \value{
-a dataframe
+a list containing dataframes for both the OBIS "eventcore" and the "eventemof".
 }
 \description{
 This function generates an OBIS-compliant "events" object for a given survey for the 

@@ -45,7 +45,7 @@ extractFGP <- function(survey = NULL, years=NULL){
     this$GSINF      <- this$GSINF[,c("MISSION",	"SETNO",	"SDATE",	"TIME", "STRAT",	"SLAT_DD",	"SLONG_DD",	"ELAT_DD",	"ELONG_DD",	"DUR",	"DIST",	"SPEED",	"DEPTH_M",	"SURFACE_TEMPERATURE",	"BOTTOM_TEMPERATURE",	"BOTTOM_SALINITY", "GEARDESC")]
     this$GSCAT      <- this$GSCAT[,c("MISSION",	"SETNO",	"SPEC",	"TOTWGT",	"TOTNO")]
     this$dataDETS      <- this$dataDETS[,c("MISSION",	"SETNO",	"SPEC",	"FLEN",	"FWT", "MATURITY",	"SEX", "AGE",	"SPECIMEN_ID")]
-    this$GSSPECIES  <- this$GSSPECIES[,c("SPEC",	"COMM",	"CODE",	"TSN")]
+    this$GSSPECIES  <- this$GSSPECIES[,c("SCIENTIFICNAME",	"COMM",	"CODE")]#,	"TSN")]
 
     # drop time from date
     this$GSINF$SDATE <- as.Date(this$GSINF$SDATE)
@@ -69,4 +69,5 @@ extractFGP <- function(survey = NULL, years=NULL){
     utils::write.csv(this$GSSPECIES, file = paste0(fn,"_GSSPECIES.csv"), row.names = F)
 
   }
+  return(this)
 }

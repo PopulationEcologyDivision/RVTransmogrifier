@@ -16,13 +16,18 @@ Imports:
   reshape2,
   RVSurveyData,
   stats,
-  stringr
+  stringr,
+  sf
 Enhances:
   mapdata,
   marmap
+Suggests:
+  utils
 Remotes:
   Maritimes/Mar.utils,
   PopulationEcologyDivision/RVSurveyData
+VignetteBuilder: 
+  utils
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
