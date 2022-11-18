@@ -23,95 +23,72 @@
 propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
   args <- list(...)
   debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), F, args$quiet) 
-  
+  quiet <- ifelse(is.null(args$quiet), F, args$quiet)
+  recdTables <- names(tblList)
+  essentialTables <- c("GSINF","GSCAT","GSMISSIONS","GSXTYPE","GSCURNT","GSFORCE","GSHOWOBT","GSSTRATUM","GSGEAR","GSSEX","GSSPECIES","GSWARPOUT","GSAUX","GSMATURITY","dataDETS","dataLF")
+  if (length(setdiff(essentialTables,recdTables))>0) stop("Missing the following tables from your tblList object: ",paste(setdiff(essentialTables,recdTables1), collapse=", "))
   LOOPAGAIN <- T
-  initcnt <- sum(sapply(tblList, NROW))
+
   if (!quiet) message("filtering")
   while (LOOPAGAIN){
+    print(sapply(tblList, nrow))
     precnt = sum(sapply(tblList, NROW))
+    #these limit GSINF
+    tblList$GSINF <- merge(tblList$GSINF, unique(tblList$GSCAT[,c("MISSION","SETNO")]), all.x=keep_nullsets )
+    tblList$GSINF <- merge(tblList$GSINF,  unique(tblList$GSMISSIONS[,"MISSION",drop=F]))
+    if (nrow(tblList$GSINF)==0){
+      if (!quiet)message("No sets remain - quitting")
+      return(-1)
+    }
+    #these are limited by GSINF
+
+    tblList$GSXTYPE  <- merge(tblList$GSXTYPE, unique(tblList$GSINF[,"TYPE",drop=F]),by.x="XTYPE", by.y="TYPE")
+    tblList$GSCURNT  <- merge(tblList$GSCURNT, unique(tblList$GSINF[,"CURNT",drop=F]))
+    tblList$GSFORCE  <- merge(tblList$GSFORCE, unique(tblList$GSINF[,"FORCE",drop=F]))
+    tblList$GSHOWOBT <- tblList$GSHOWOBT[which(tblList$GSHOWOBT$HOWOBT %in% c(unique(tblList$GSINF$HOWD),unique(tblList$GSINF$HOWS))) ,]
+    tblList$GSAUX    <- merge(tblList$GSAUX, unique(tblList$GSINF[,"AUX",drop=F]))
+    tblList$GSSTRATUM <- merge(tblList$GSSTRATUM, unique(tblList$GSINF[,"STRAT",drop=F]))
+    tblList$GSGEAR     <- merge(tblList$GSGEAR, unique(tblList$GSINF[,"GEAR",drop=F]))
+    tblList$GSMISSIONS <- merge(tblList$GSMISSIONS, unique(tblList$GSINF[,"MISSION",drop=F]))
+    tblList$GSWARPOUT <- merge(tblList$GSWARPOUT, unique(tblList$GSINF[,c("MISSION","SETNO")]))
+    #these limit GSCAT
+    tblList$GSCAT <- merge(tblList$GSCAT, unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=keep_nullsets )
+    tblList$GSCAT <- merge(tblList$GSCAT,  unique(tblList$GSSPECIES[,"CODE",drop=F]), by.x="SPEC", by.y  ="CODE")
+    if (nrow(tblList$GSCAT)==0){
+      if (!quiet)message("No catch records remain - quitting")
+      return(-1)
+    }
+    #these are limited by GSCAT
+    tblList$dataDETS <- merge(tblList$dataDETS, unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")])) 
+    tblList$dataLF   <- merge(tblList$dataLF,   unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")]))
     
-    if ("GSINF" %in% names(tblList)){
-      #these limit GSINF
-      if (!keep_nullsets & "GSCAT" %in% names(tblList)) tblList$GSINF <- tblList$GSINF[which(paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO) %in% paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO)),]
-      if ("GSMISSIONS" %in% names(tblList)) tblList$GSINF <- tblList$GSINF[which(tblList$GSINF$MISSION %in% tblList$GSMISSIONS$MISSION),]
-      
-      if (nrow(tblList$GSINF)==0){
-        if (!quiet)message("No sets remain - quitting")
-        return(-1)
-      }
-      #these are limited by GSINF
-      if ("GSXTYPE" %in% names(tblList)) tblList$GSXTYPE <- tblList$GSXTYPE[which(tblList$GSXTYPE$XTYPE %in% tblList$GSINF$TYPE),]
-      if ("GSCURNT" %in% names(tblList)) tblList$GSCURNT <- tblList$GSCURNT[which(tblList$GSCURNT$CURNT %in% tblList$GSINF$CURNT),]
-      if ("GSFORCE" %in% names(tblList)) tblList$GSFORCE <- tblList$GSFORCE[which(tblList$GSFORCE$FORCE %in% tblList$GSINF$FORCE),]
-      if ("GSHOWOBT" %in% names(tblList)) tblList$GSHOWOBT <- tblList$GSHOWOBT[which(tblList$GSHOWOBT$HOWOBT %in% c(tblList$GSINF$HOWD,tblList$GSINF$HOWS)) ,]
-      if ("GSXTYPE" %in% names(tblList)) tblList$GSAUX <- tblList$GSAUX[which(tblList$GSAUX$AUX %in% tblList$GSINF$AUX),]
-      if ("GSSTRATUM" %in% names(tblList)) tblList$GSSTRATUM <- tblList$GSSTRATUM[which(tblList$GSSTRATUM$STRAT %in% tblList$GSINF$STRAT),]
-      if ("GSCRUISELIST" %in% names(tblList)) tblList$GSCRUISELIST <- tblList$GSCRUISELIST[which(tblList$GSCRUISELIST$MISSION %in% tblList$GSINF$MISSION),]
-      if ("GSGEAR" %in% names(tblList)) tblList$GSGEAR <- tblList$GSGEAR[which(tblList$GSGEAR$GEAR %in% tblList$GSINF$GEAR),]
-      if ("GSMISSIONS" %in% names(tblList)) tblList$GSMISSIONS <- tblList$GSMISSIONS[which(tblList$GSMISSIONS$MISSION %in% tblList$GSINF$MISSION),]
-      if ("GSWARPOUT" %in% names(tblList)) tblList$GSWARPOUT <- tblList$GSWARPOUT[which(paste0(tblList$GSWARPOUT$MISSION,"_",tblList$GSWARPOUT$SETNO) %in% paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO)),]
+    if(any(c("GSCAT_agg","dataLF_agg")%in% names(tblList)) & ("GSCAT" %in% names(tblList) & "GSSPECIES" %in% names(tblList))){
+      tmp <- unique(merge(tblList$GSCAT[,c("MISSION", "SETNO","SPEC")], unique(tblList$GSSPECIES[,c("CODE", "TAXA_","TAXARANK_")]), by.x="SPEC", by.y="CODE"))
+      tmp$SPEC <- NULL
+      tblList$GSCAT_agg  <- merge(tblList$GSCAT_agg,  unique(tmp[,c("MISSION", "SETNO","TAXA_","TAXARANK_")]))
+      tblList$dataLF_agg <- merge(tblList$dataLF_agg, unique(tmp[,c("MISSION", "SETNO","TAXA_","TAXARANK_")]))
     }
     
-    if ("GSCAT" %in% names(tblList)){
-      #these limit GSCAT
-      if (!keep_nullsets & "GSINF" %in% names(tblList)) tblList$GSCAT <- tblList$GSCAT[which(paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO) %in% 
-                                                                                               paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO)),]
-      if ("GSINF" %in% names(tblList)) tblList$GSCAT <- tblList$GSCAT[which(paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO) %in% 
-                                                                              paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO)) ,]
-      if ("GSSPECIES" %in% names(tblList)) tblList$GSCAT <- tblList$GSCAT[which(tblList$GSCAT$SPEC %in% tblList$GSSPECIES$CODE) ,]
-      if (nrow(tblList$GSCAT)==0){
-        if (!quiet)message("No catch records remain - quitting")
-        return(-1)
-      }
-      #these are limited by GSCAT
-      if ("dataDETS" %in% names(tblList)) tblList$dataDETS <- tblList$dataDETS[which(paste0(tblList$dataDETS$MISSION,"_",tblList$dataDETS$SETNO,"_",tblList$dataDETS$SPEC) %in% 
-                                                                                       paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO,"_",tblList$GSCAT$SPEC)) ,]
-      if ("dataLF" %in% names(tblList)) tblList$dataLF <- tblList$dataLF[which(paste0(tblList$dataLF$MISSION,"_",tblList$dataLF$SETNO,"_",tblList$dataLF$SPEC) %in% 
-                                                                                 paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO,"_",tblList$GSCAT$SPEC)) ,]
-      
-      if(any(c("GSCAT_agg","dataLF_agg")%in% names(tblList)) & ("GSCAT" %in% names(tblList) & "GSSPECIES" %in% names(tblList))){
-        tmp <- unique(merge(tblList$GSCAT[,c("MISSION", "SETNO","SPEC")], tblList$GSSPECIES[,c("CODE", "TAXA_","TAXARANK_")], by.x="SPEC", by.y="CODE"))
-        tmp$SPEC <- NULL
-        tblList$GSCAT_agg <- tblList$GSCAT_agg[which(paste0(tblList$GSCAT_agg$MISSION,"_",tblList$GSCAT_agg$SETNO,"_",tblList$GSCAT_agg$TAXA_,"_",tblList$GSCAT_agg$TAXARANK_) %in% 
-                                                       paste0(tmp$MISSION,"_",tmp$SETNO,"_",tmp$TAXA_,"_",tmp$TAXARANK_)) ,]
-        tblList$dataLF_agg <- tblList$dataLF_agg[which(paste0(tblList$dataLF_agg$MISSION,"_",tblList$dataLF_agg$SETNO,"_",tblList$dataLF_agg$TAXA_,"_",tblList$dataLF_agg$TAXARANK_) %in% 
-                                                         paste0(tmp$MISSION,"_",tmp$SETNO,"_",tmp$TAXA_,"_",tmp$TAXARANK_)) ,]
-      }
-    }
+    #these limit dataDETS
+    tblList$dataDETS <- merge(tblList$dataDETS, unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")]))
+    tblList$dataDETS <- merge(tblList$dataDETS, unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=keep_nullsets)
+    #these are limited by dataDETS
+    tblList$GSMATURITY <- merge(tblList$GSMATURITY, unique(tblList$dataDETS[,"FMAT",drop=F]), by.x="CODE", by.y="FMAT")
+    tblList$GSSEX <- merge(tblList$GSSEX, unique(tblList$dataDETS[,"FSEX",drop=F]), by.x="CODE", by.y="FSEX")
+    tblList$dataLF <- merge(tblList$dataLF, unique(tblList$dataDETS[,c("MISSION","SETNO", "SPEC","FSEX")]))
     
-    if ("dataDETS" %in% names(tblList)){
-      #these limit dataDETS
-      if ("GSCAT" %in% names(tblList)) tblList$dataDETS <- tblList$dataDETS[which(paste0(tblList$dataDETS$MISSION,"_",tblList$dataDETS$SETNO,"_",tblList$dataDETS$SPEC) %in% 
-                                                                                    paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO,"_",tblList$GSCAT$SPEC)) ,]
-      if (!keep_nullsets & "GSINF" %in% names(tblList)) tblList$dataDETS <- tblList$dataDETS[which(paste0(tblList$dataDETS$MISSION,"_",tblList$dataDETS$SETNO) %in% 
-                                                                                                     paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO)) ,]
-      #these are limited by dataDETS
-      if ("GSMATURITY" %in% names(tblList)) tblList$GSMATURITY <- tblList$GSMATURITY[which(tblList$GSMATURITY$CODE %in% tblList$dataDETS$FMAT),]
-      if ("GSSEX" %in% names(tblList)) tblList$GSSEX <- tblList$GSSEX[which(tblList$GSSEX$CODE %in% tblList$dataDETS$FSEX),]
-      if ("dataLF" %in% names(tblList)) tblList$dataLF <- tblList$dataLF[which(paste0(tblList$dataLF$MISSION,"_",tblList$dataLF$SETNO,"_",tblList$dataLF$SPEC,"_",tblList$dataLF$FSEX) %in% 
-                                                                                 paste0(tblList$dataDETS$MISSION,"_",tblList$dataDETS$SETNO,"_",tblList$dataDETS$SPEC,"_",tblList$dataDETS$FSEX)) ,]
-    } 
+    #these limit dataLF
+    tblList$dataLF <- merge(tblList$dataLF, unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")]))
+
+    if (!keep_nullsets) tblList$dataLF <- merge(tblList$dataLF,unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=keep_nullsets)
     
-    if ("dataLF" %in% names(tblList)){
-      #these limit dataLF
-      if ("GSCAT" %in% names(tblList)) tblList$dataLF <- tblList$dataLF[which(paste0(tblList$dataLF$MISSION,"_",tblList$dataLF$SETNO,"_",tblList$dataLF$SPEC) %in% 
-                                                                                paste0(tblList$GSCAT$MISSION,"_",tblList$GSCAT$SETNO,"_",tblList$GSCAT$SPEC)) ,]
-      if (!keep_nullsets & "GSINF" %in% names(tblList)) tblList$dataLF <- tblList$dataLF[which(paste0(tblList$dataLF$MISSION,"_",tblList$dataLF$SETNO) %in% 
-                                                                                                 paste0(tblList$GSINF$MISSION,"_",tblList$GSINF$SETNO)) ,]
-      
-      #these are limited by dataLF
-      if ("GSMATURITY" %in% names(tblList)) tblList$GSMATURITY <- tblList$GSMATURITY[which(tblList$GSMATURITY$CODE %in% tblList$dataDETS$FMAT),]
-      if ("GSSEX" %in% names(tblList)) tblList$GSSEX <- tblList$GSSEX[which(tblList$GSSEX$CODE %in% tblList$dataDETS$FSEX),]
-      if ("dataDETS" %in% names(tblList)) tblList$dataDETS <- tblList$dataDETS[which(paste0(tblList$dataDETS$MISSION,"_",tblList$dataDETS$SETNO,"_",tblList$dataDETS$SPEC,"_",tblList$dataDETS$FSEX) %in% 
-                                                                                       paste0(tblList$dataLF$MISSION,"_",tblList$dataLF$SETNO,"_",tblList$dataLF$SPEC,"_",tblList$dataLF$FSEX)) ,]
-    } 
+    #these are limited by dataLF
+    tblList$GSMATURITY <- merge(tblList$GSMATURITY, unique(tblList$dataDETS[,"FMAT",drop=F]), by.x="CODE", by.y="FMAT")
+    tblList$GSSEX <- merge(tblList$GSSEX, unique(tblList$dataDETS[,"FSEX",drop=F]), by.x="CODE", by.y="FSEX")
+    tblList$dataDETS <- merge(tblList$dataDETS, unique(tblList$dataLF[,c("MISSION","SETNO", "SPEC","FSEX")]))
     
-    if ("GSSPECIES" %in% names(tblList)){
-      #these limit GSSPECIES
-      if ("GSCAT" %in% names(tblList)) tblList$GSSPECIES <- tblList$GSSPECIES[which(tblList$GSSPECIES$CODE %in% tblList$GSCAT$SPEC),]
-    }
-    
+    #these limit GSSPECIES
+    tblList$GSSPECIES <- merge(tblList$GSSPECIES, unique(tblList$GSCAT[,"SPEC",drop=F]), by.x="CODE", by.y="SPEC")
     
     postcnt = sum(sapply(tblList, NROW))
     if(postcnt==precnt) {

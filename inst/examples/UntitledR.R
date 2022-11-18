@@ -17,17 +17,52 @@ if (F){
   sourcery()
   
   #extract a survey's worth of data
-  SUMMER2021 <- getSurvey("SUMMER", years = 2021)
-  #limit the data to only a few different taxa
+  SUMMER2020_allSp <- getSurvey("SUMMER", years = 2020)
+  #simple plot call, filtering data to only cod (ie code = 10)
+  plotRV(tblList = SUMMER2020_allSp, code=10, plotNullsets = T, plotSets ="TOTWGT", labelStrata = T)
+  
+  #Cod fun
+  #Limit the data to just cod
+  SUMMER2020_cod <- getSurvey("SUMMER", code = 10, years = 2020)
+  #plot the cod - should be identical to the previous plot
+  plotRV(tblList = SUMMER2020_cod, plotNullsets = T, plotSets ="TOTWGT", labelStrata = T)
+  
+  
+  #generate stratified dataset of cod
+  strat2020_cod  <- stratify(SUMMER2020, code = 10)
+
+  #instead of set locations, plot the stratified BIOMASS of cod for this survey
+  plotRV(tblList = SUMMER2020, code=10, plotNullsets = T, plotSets =NULL, 
+         catchStrataData = strat2020_cod$`10`, plotCatchStrata = "BIOMASS_T")
+  
+  strat2020_GADIFORMES  <- stratify(SUMMER2020, taxa = "GADIFORMES")
+  plotRV(tblList = SUMMER2020, plotNullsets = T, plotSets =NULL, 
+         catchStrataData = strat2020_GADIFORMES$GADIFORMES, plotCatchStrata = "BIOMASS_T")
+  
+  #simple plot of all Gadiformes - includes:
+  # - ARCTIC COD, COD(ATLANTIC), CUSK, FOURBEARD ROCKLING, HADDOCK, LONGFIN HAKE, 
+  # - MARLIN-SPIKE GRENADIER, OFF-SHORE HAKE, POLLOCK, SILVER HAKE, SQUIRREL OR RED HAKE, 
+  # - THREEBEARD ROCKLING, WHITE HAKE and NEZUMIA
+  plotRV(tblList = SUMMER2020, taxa = "GADIFORMES", plotNullsets = T, plotSets ="TOTWGT")
+  #simple plot of all Gadiformes
+  plotRV(tblList = SUMMER2020, taxa = "ARTHROPODA", plotNullsets = T, plotSets ="TOTWGT")
+  plotRV(tblList = SUMMER2020, taxa = "ARTHROPODA", plotNullsets = T, plotSets ="TOTWGT")
+  
+  
+                            #limit the data to only a few different taxa
   test1      <- filterSpecies(SUMMER2021, keep_nullsets = T, taxa = "ECHINODERMATA")
   
   #plot some data
-  plotRV_pts(tblList = SUMMER2022, taxa=c("ECHINODERMATA"), plotNullsets = T, plotSets ="TOTNO")
+  plotRV(tblList = SUMMER2022, taxa=c("ECHINODERMATA"), plotNullsets = T, plotSets ="TOTNO")
   
   #stratify the data (i.e. bump up values for short tows; bump down longer tows, etc)
-  strat2021     <- stratify(SUMMER2021, taxa = "ECHINODERMATA")
+  strat2021     <- stratify(SUMMER2021, code = "ECHINODERMATA")
+  
   plotRV(tblList = SUMMER2022, taxa=c("ECHINODERMATA"), showNullsets = T, plotSets ="ALL", 
              plotBathy = "LINES", plotCatchStrata = "MEAN_WGT", catchStrataData = strat2021$ECHINODERMATA)
+  
+  plotRV(plotBathy = "LINES", plotCatchStrata = "MEAN_WGT", catchStrataData = strat2021$ECHINODERMATA)
+  
   
   
   testFGP <- extractFGP("SUMMER", years = 2011)

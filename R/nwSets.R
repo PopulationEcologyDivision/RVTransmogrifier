@@ -24,6 +24,7 @@ nwSets<-function(tblList = NULL,towDist = 1.75, ...){
   res<-list()
   for(t in 1:length(taxa)){
     thisTaxSets<-merge(tblList$GSINF, dfRawCatch[dfRawCatch[,t_field] == taxa[t], ], all.x=T)
+    thisTaxSets[which(is.na(thisTaxSets[,t_field])),t_field]<- taxa[t]
     thisTaxSets[which(is.na(thisTaxSets$TOTWGT)),c('TOTWGT','TOTNO')]<- 0
     thisTaxSets$DIST[which(is.na(thisTaxSets$DIST)|(thisTaxSets$DIST==0))] <-towDist
     thisTaxSets$RAW_TOTWGT <-thisTaxSets$TOTWGT

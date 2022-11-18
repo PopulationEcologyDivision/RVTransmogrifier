@@ -28,7 +28,7 @@ ggNAFO <- function(plotNAFO = TRUE, plotLabels = TRUE, filter= NULL){
   nafo <- sf::st_transform(nafo, crs = 4326)
   if (plotNAFO){
     ggItems[["nafo"]] <- ggplot2::geom_sf(data = nafo,fill=NA, color="#88888833")
-    if(plotLabels) ggItems[["nafo"]] <- c(ggItems[["nafo"]],ggplot2::geom_sf_text(data = RVSurveyData::nafo_sf,aes(label = NAFO), fun.geometry = sf::st_centroid, fontface = "italic", color="#88888880", size = 4))
+    if(plotLabels) ggItems[["nafo"]] <- c(ggItems[["nafo"]],ggplot2::geom_sf_text(data = nafo,aes(label = NAFO), fun.geometry = sf::st_centroid, fontface = "italic", color="#88888880", size = 4))
   }else{
     ggItems[["nafo"]] <- NULL
   }
@@ -41,10 +41,12 @@ ggStrata <- function(plotStrata=TRUE, plotLabels=TRUE, filter=NULL){
   strata <- RVSurveyData::strataMar_sf
   strata <- sf::st_transform(strata, crs = 4326)
   if(!is.null(filter)) strata<-strata[strata$STRATA_ID %in% filter,]
-
   if (plotStrata){
     ggItems[["strata"]] <- ggplot2::geom_sf(data = strata,fill=NA, color="#00669933")
-    if(plotLabels) ggItems[["strata"]] <- c(ggItems[["strata"]],ggplot2::geom_sf_text(data = strata,aes(label = STRATA_ID), fun.geometry = sf::st_centroid, fontface = "italic", color="#00669933", size = 4))
+    if(plotLabels) {
+      strata<- sf::st_set_geometry(strata, 'centroids')
+      ggItems[["strata"]] <- c(ggItems[["strata"]],ggplot2::geom_sf_text(data = strata,aes(label = STRATA_ID), fontface = "italic", color="#88888880", size = 4))##00669933
+    }
   }else{
     ggItems[["strata"]] <- NULL
   }
@@ -53,14 +55,16 @@ ggStrata <- function(plotStrata=TRUE, plotLabels=TRUE, filter=NULL){
 ggCatchPts <- function(catchdata = NULL, sizeVar=NULL, colourVar = NULL, return=NULL){
   ggItems<- list()
   if (return=="CATCHES"){
+    # browser()
     if(length(colourVar)>1){
       ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes_string(x="SLONG_DD", y="SLAT_DD", size = sizeVar, colour=colourVar[1]), alpha = 0.6)
-      ggItems[["catchPts"]] <- c(ggItems[["catchPts"]],ggplot2::scale_color_discrete(name=colourVar[1],labels=paste0(catchdata[!is.na(catchdata[,sizeVar]),colourVar[1]]," (",catchdata[!is.na(catchdata[,sizeVar]),colourVar[2]],")")))
-    }else{
+      ggItems[["catchPts"]] <- c(ggItems[["catchPts"]],ggplot2::scale_color_discrete(name=colourVar[1],
+                                                                                     labels=paste0(catchdata[!is.na(catchdata[,sizeVar]),colourVar[1]]," (",catchdata[!is.na(catchdata[,sizeVar]),colourVar[2]],")")))
+          }else{
       ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes_string(x="SLONG_DD", y="SLAT_DD", size = sizeVar, colour=colourVar), alpha = 0.6)
     }
-    ggItems[["catchPts"]] <- c(ggItems[["catchPts"]], scale_size_continuous(range = c(2,8)))
-  }
+    ggItems[["catchPts"]] <- c(ggItems[["catchPts"]], ggplot2::scale_size_continuous(range = c(2,8)))
+   }
   if (return=="NULLSETS"){
     ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[is.na(catchdata[,sizeVar]),], ggplot2::aes(SLONG_DD, SLAT_DD),  shape=3, size= 2, color="black")
   }

@@ -7,12 +7,16 @@
 #' @param years the default is \code{NULL}. This parameter allows you to generate datasets for one or
 #' more specific years.  A value of NULL will result in products being generated for all years for
 #' which data exists, and a vector of years will result in dataset that include the specified years.
+#' @param validTowsOnly the default is \code{TRUE}.  "Valid" survey tows (i.e. "type 1") are those 
+#' tows that fished correctly, and can be used confidently while looking data from a stratified  
+#' random survey design.  Setting \code{validTowsOnly} to \code{FALSE} will allow other types of sets 
+#' to be extracted, but these shouldn't be included while assessing fish stocks.
 #' @param ... other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')
 #' @returns a list of dataframes which have been filtered to only include data related to the 
 #' specified survey and years
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-getSurvey<-function(survey = NULL, years=NULL, ...){
+getSurvey<-function(survey = NULL, years=NULL, validTowsOnly = TRUE,...){
   args <- list(...)
   keep_nullsets <- ifelse(is.null(args$keep_nullsets), T, args$keep_nullsets) 
   debug <- ifelse(is.null(args$debug), F, args$debug) 
@@ -27,23 +31,37 @@ getSurvey<-function(survey = NULL, years=NULL, ...){
                    "FALL" = c(9,10,11,12),
                    "4VSW" = -1
   )
-  thisList <- loadRVData()
+  tblList <- loadRVData()
   
-  thisList$GSINF <- thisList$GSINF[thisList$GSINF$TYPE==1,]
+
+
+  if (validTowsOnly) tblList$GSINF <- tblList$GSINF[tblList$GSINF$TYPE==1,]
   if (!is.null(years)){
-    thisList$GSMISSIONS <- thisList$GSMISSIONS[which(thisList$GSMISSIONS$YEAR %in% c(years)),]
+    tblList$GSMISSIONS <- tblList$GSMISSIONS[which(tblList$GSMISSIONS$YEAR %in% c(years)),]
   }
   if (survey != "4VSW"){
     #get rid of 4VSW cod data
-    thisList$GSINF <- thisList$GSINF[-which(thisList$GSINF$STRAT %in% c(396:411)
-                                            & lubridate::month(thisList$GSINF$SDATE) %in% c(1,2,3,4)),]
+    tblList$GSINF <- tblList$GSINF[-which(tblList$GSINF$STRAT %in% c(396:411)
+                                            & lubridate::month(tblList$GSINF$SDATE) %in% c(1,2,3,4)),]
     #retain appropriate months
-    thisList$GSINF <- thisList$GSINF[which(lubridate::month(thisList$GSINF$SDATE) %in% months),]
+    tblList$GSINF <- tblList$GSINF[which(lubridate::month(tblList$GSINF$SDATE) %in% months),]
   }else{
-    thisList$GSINF <- thisList$GSINF[which(thisList$GSINF$STRAT %in% c(396:411)
-                                           & lubridate::month(thisList$GSINF$SDATE) %in% c(1,2,3,4)),]
+    tblList$GSINF <- tblList$GSINF[which(tblList$GSINF$STRAT %in% c(396:411)
+                                           & lubridate::month(tblList$GSINF$SDATE) %in% c(1,2,3,4)),]
   }
-  res <- propagateChanges(thisList, keep_nullsets=keep_nullsets, quiet=T)
-  if (is.numeric(res))stop("Your query did not return valid results")
-  return(res)
+  if(!is.null(args$taxa)|!is.null(args$code)|!is.null(args$aphiaid)){
+    tblList      <- filterSpecies(tblList, keep_nullsets = keep_nullsets,
+                                  taxa = args$taxa,
+                                  code = args$code,
+                                  aphiaid = args$aphiaid)
+    if (class(tblList)=="numeric")stop("Requested filter removed all species")
+    tblList      <- aggregateByTaxa(tblList = tblList,
+                                    taxa = args$taxa,
+                                    code = args$code,
+                                    aphiaid = args$aphiaid)
+  }
+  tblList <- propagateChanges(tblList, keep_nullsets=keep_nullsets, quiet=T)
+  if (is.numeric(tblList))stop("Your query did not return valid results")
+ 
+  return(tblList)
 }

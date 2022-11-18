@@ -21,12 +21,13 @@ stratify <- function(tblList = NULL, ...){
                                     code = args$code,
                                     aphiaid = args$aphiaid)
   }
-  
   dfNWSets  <- nwSets(tblList = tblList, ...)
+  
+  t_field <- ifelse("GSCAT_agg" %in% names(tblList),"TAXA_", "SPEC")
   res <-list()
   for(s in 1:length(dfNWSets)){
     thisDat   <- nwStrat(tblList = tblList, dfNWSets=dfNWSets[[s]])
-    nm<- thisDat[!is.na(thisDat$TAXA_),"TAXA_"][1]
+    nm<- thisDat[!is.na(thisDat[,t_field]),t_field][1]
     nm <- gsub(x = nm, pattern = "[ ()/,\\.]", replacement = "_")
     # res[[nm]]$NWSet   <- dfNWSets[[s]]
     res[[nm]] <- thisDat

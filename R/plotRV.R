@@ -35,6 +35,13 @@ plotRV <- function(tblList = NULL,
   debug <- ifelse(is.null(args$debug), F, args$debug) 
   quiet <- ifelse(is.null(args$quiet), F, args$quiet)
 
+  roundDD2Min<-function(x=NULL, prec=4, nearestMin = 1){
+    minDD = 0.016666666666 #this is 1 min in DD
+    base = nearestMin*minDD
+    res <- round(base * round(x/base),prec)
+    return(res)
+  }
+  
   if(!is.null(args$taxa)|!is.null(args$code)|!is.null(args$aphiaid)){
     tblList      <- filterSpecies(tblList, keep_nullsets = T,
                                   taxa = args$taxa,
@@ -54,12 +61,16 @@ plotRV <- function(tblList = NULL,
   }
   if (!is.null(catchStrataData)) {
     #otherwise we can use the catchStrataData)
-    limits2 <- sort(getBbox(filterVals = unique(strat2021[[1]]$STRAT)))
+    limits2 <- sort(getBbox(filterVals = unique(catchStrataData$STRAT)))
+    #if we have stratified catch data, we can't have filled contours
+    if(plotBathy == "FILL")plotBathy <- "LINES"
   }else{
     limits2 <- c(0,0,0,0)
   }
 
   limits <-c(pmin(limits1[1:2],limits2[1:2]), pmax(limits1[3:4],limits2[3:4]))
+  #round limits to nearest 30mins so that the bbox doesn't vary between successive plots of the same data
+  limits <- roundDD2Min(limits,nearestMin = 30)
   #add plot elements to this list.
   ggItems <- list()
   
@@ -69,8 +80,8 @@ plotRV <- function(tblList = NULL,
   ggItems[["bathy"]]      <- ggBathy(plotBathy=plotBathy, bathyIntervals=bathyIntervals)
   ggItems[["bkgdStrata"]] <- ggStrata(plotStrata=plotStrata, plotLabels=labelStrata, filter=unique(tblList$GSINF$STRAT))
   ggItems[["bkgdNAFO"]]   <- ggNAFO(plotNAFO=plotNAFO, plotLabels=labelNAFO, filter=NULL)
-  
-  if (!is.null(catchStrataData) & plotCatchStrata %in% c("TOTNO", "TOTWGT", "MEAN_WGT", "MEAN_NO", "BIOMASS", "ABUND")){
+  if (!is.null(catchStrataData) & plotCatchStrata %in% c("TOTNO", "TOTWGT", "MEAN_WGT", "MEAN_NO", "BIOMASS", "BIOMASS_T", "ABUND")){
+    if (plotCatchStrata == "BIOMASS")plotCatchStrata="BIOMASS_T"
     #   #can't plot bkgrd strata if the strata are to be plotted by catch
     ggItems[["bkgdStrata"]] <- NULL
     ggItems[["gg_stratData"]] <- ggStrataData(catchStrataData = catchStrataData, plotField = plotCatchStrata)
@@ -92,7 +103,6 @@ plotRV <- function(tblList = NULL,
     catches <- merge(catches, tblList$GSINF[,c("MISSION", "SETNO",'SLONG_DD', 'SLAT_DD')], by=c("MISSION", "SETNO"),all.y=T)
     if ("TAXA_" %in% names(catches)){
       t_field <- "TAXA_"
-      colLeg <- "TAXA"
     }else{
       #if 2 fields sent, the format will be "t_field1 (t_field2)"
       t_field <- c("SCIENTIFICNAME", "APHIAID")
@@ -106,14 +116,12 @@ plotRV <- function(tblList = NULL,
       catLeg <- NULL
       ggItems[["allPts"]] <- ggCatchPts(catchdata = catches, sizeVar="TOTNO", colourVar = NULL, return="ALLSETS")
     }
+    ggItems[["catchLabels"]] <- ggplot2::guides(color = ggplot2::guide_legend(title = "Taxa",order=1), size = ggplot2::guide_legend(title = catLeg,order=2))
   }
-  
-  
-  
-  
+
   ggItems[["land"]]   <- ggplot2::geom_polygon(data = RVSurveyData::maritimesLand, ggplot2::aes(x = long, y = lat, group = group), fill = "darkgrey", color = NA) 
   ggItems[["extent"]] <- ggplot2::coord_sf(xlim = c(limits[1],limits[2]), ylim = c(limits[3], limits[4]))
-  ggItems[["labels"]] <- ggplot2::labs(x="Longitude", y="Latitude", size = catLeg, col="CRAP")
+  ggItems[["labels"]] <- ggplot2::labs(x="Longitude", y="Latitude")
   p<-p+ggItems
   return(p)
   # if (!is.null(plotCatchStrata)){
