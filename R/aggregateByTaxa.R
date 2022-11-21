@@ -21,14 +21,14 @@ aggregateByTaxa <- function(tblList = NULL, code=NULL, aphiaid=NULL, taxa = NULL
   if(!is.null(taxa)) GSCAT_agg$APHIAID <- dataLF_agg$APHIAID <- GSCAT_agg$SCIENTIFICNAME <- dataLF_agg$SCIENTIFICNAME <- NULL
   
   GSCAT_agg <- GSCAT_agg %>%
-    dplyr::group_by(across(c(-TOTNO, -TOTWGT))) %>%
+    dplyr::group_by(dplyr::across(c(-TOTNO, -TOTWGT))) %>%
     dplyr::summarise(TOTNO=sum(TOTNO),
                      TOTWGT=sum(TOTWGT),
                      .groups = "keep")%>%
     as.data.frame()
   
   dataLF_agg <- dataLF_agg %>%
-    dplyr::group_by(across(c(-CLEN))) %>%
+    dplyr::group_by(dplyr::across(c(-CLEN))) %>%
     dplyr::summarise(CLEN=sum(CLEN),
                      .groups = "keep")%>%
     as.data.frame()

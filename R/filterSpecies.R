@@ -72,7 +72,7 @@ filterSpecies <- function(tblList = NULL, code=NULL, aphiaid=NULL, taxa = NULL, 
       }
       these$TAXA_ <- taxa[t]
       rankCheck <- which(apply(these[,!names(these) %in% c("COMMENTS","TAXA_")], 2, function(b) any(grepl(taxa[t], b))))
-      rankCheck <- stack(rankCheck)
+      rankCheck <- utils::stack(rankCheck)
       rankCheck$ind <- as.character(rankCheck$ind)
       if (nrow(rankCheck)==1){
         these$TAXARANK_ <- rankCheck$ind

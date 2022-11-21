@@ -4,7 +4,7 @@
 \alias{getSurvey}
 \title{getSurvey}
 \usage{
-getSurvey(survey = NULL, years = NULL, ...)
+getSurvey(survey = NULL, years = NULL, type1TowsOnly = TRUE, ...)
 }
 \arguments{
 \item{survey}{the default is \code{NULL}. This specifies which survey should be extracted.  Valid
@@ -13,6 +13,11 @@ values are "SPRING", "SUMMER", "FALL", and "4VSW".}
 \item{years}{the default is \code{NULL}. This parameter allows you to generate datasets for one or
 more specific years.  A value of NULL will result in products being generated for all years for
 which data exists, and a vector of years will result in dataset that include the specified years.}
+
+\item{type1TowsOnly}{the default is \code{TRUE}.  "Valid" survey tows (i.e. "type 1") are those 
+tows that fished correctly, and can be used confidently while looking data from a stratified  
+random survey design.  Setting \code{type1TowsOnly} to \code{FALSE} will allow other types of sets 
+to be extracted, but these shouldn't be included while assessing fish stocks.}
 
 \item{...}{other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')}
 }

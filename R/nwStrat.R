@@ -39,18 +39,18 @@ nwStrat<-function(tblList = NULL, dfNWSets= NULL, ...){
     tmp <- tmp[!is.na(tmp[,t_field]),]
   }
   tmp.cnt <- tmp %>%
-    dplyr::group_by(across(all_of(c("STRAT", t_field)))) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c("STRAT", t_field)))) %>%
     dplyr::summarise(COUNT = length(STRAT), 
                      .groups = "keep")%>%
     as.data.frame()
   tmp.sum <- tmp %>%
-    dplyr::group_by(across(all_of(c("STRAT", t_field)))) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c("STRAT", t_field)))) %>%
     dplyr::summarise(TOT_WGT = round(sum(TOTWGT),5),
                      TOT_NO = round(sum(TOTNO),5), 
                      .groups = "keep")%>%
     as.data.frame()
   tmp.mean <- tmp %>%
-    dplyr::group_by(across(all_of(c("STRAT", t_field)))) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c("STRAT", t_field)))) %>%
     dplyr::summarise(MEAN_WGT = round(mean(TOTWGT),5),
                      MEAN_NO = round(mean(TOTNO),5),
                      BIOMASS_T = round(mean(BIOMASS)/1000,5),
@@ -58,7 +58,7 @@ nwStrat<-function(tblList = NULL, dfNWSets= NULL, ...){
                      .groups = "keep")%>%
     as.data.frame()
   tmp.sterr <- tmp %>%
-    dplyr::group_by(across(all_of(c("STRAT", t_field)))) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c("STRAT", t_field)))) %>%
     dplyr::summarise(ST_ERR_WGT = round(Mar.utils::st_err(TOTWGT),5),
                      ST_ERR_NO = round(Mar.utils::st_err(TOTNO),5),
                      ST_ERR_BIOMASS = round(Mar.utils::st_err(BIOMASS),5),

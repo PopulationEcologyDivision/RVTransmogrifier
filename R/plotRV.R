@@ -1,5 +1,6 @@
 #' @title plotRV
-#' @description This function .
+#' @description This function can plot the list data resulting from \code{get_survey()} or from 
+#' \code{propagateChanges()}.
 #' @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes that
 #' should have filtering applied to them.
 #' @param plotSets the default is \code{"TOTWGT"}, but can also be \code{"TOTWGT"}.  If set to \code{NULL},
@@ -9,16 +10,15 @@
 #' @param plotCatchStrata the default is \code{"MEAN_WGT"}, but can be any of \code{"TOTNO"}, \code{"TOTWGT"}, 
 #' \code{"MEAN_WGT"}, \code{"MEAN_NO"}, \code{"BIOMASS"}, or \code{"ABUND"}. If set to \code{NULL},
 #' no strata will be plotted by catch.
-#' @param catchStrataData
+#' @param catchStrataData the default is \code{NULL}. This is a stratified object resulting from running 
+#' \code{stratify}.  \code{stratify()} can generate multiple dfs within a list, but this parameter should
+#' be pointed to a single dataframe.
 #' @param bkgdStrata the default is \code{TRUE}. Should strata lines be shown?
 #' @param plotBathy the default is \code{"FILL"}, but can be any of \code{"FILL"}, \code{"LINES"} or \code{NULL}.  
 #' FILL results in progressively darker blue areas as depth increases. 
 #' LINES results in contour lines.
 #' NULL does not show any bathymetric information.
 #' @param bathyIntervals the default is \code{100} (m).  This is the difference in depth between contour lines.
-#' @param title  the default is \code{"auto"}. By default, if the plot will be titled by the species 
-#' available in the data. Changing this value will result in a custom title.  Setting this to NULL 
-#' will remove the title altogether.
 #' @param ... other arguments passed to methods (e.g.'taxa', 'code', 'aphiaid', debug' and 'quiet')
 #' @returns a ggplot object showing the positions of the data.  Null sets will be shown as + signs.
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
@@ -29,18 +29,12 @@ plotRV <- function(tblList = NULL,
                        plotStrata = TRUE,labelStrata=TRUE,
                        plotBathy = "FILL", bathyIntervals=200,
                        plotNAFO=FALSE, labelNAFO = FALSE,
-                       # title ="auto", 
                        ...){
   args <- list(...)
   debug <- ifelse(is.null(args$debug), F, args$debug) 
   quiet <- ifelse(is.null(args$quiet), F, args$quiet)
 
-  roundDD2Min<-function(x=NULL, prec=4, nearestMin = 1){
-    minDD = 0.016666666666 #this is 1 min in DD
-    base = nearestMin*minDD
-    res <- round(base * round(x/base),prec)
-    return(res)
-  }
+
   
   if(!is.null(args$taxa)|!is.null(args$code)|!is.null(args$aphiaid)){
     tblList      <- filterSpecies(tblList, keep_nullsets = T,
@@ -53,30 +47,33 @@ plotRV <- function(tblList = NULL,
                                     code = args$code,
                                     aphiaid = args$aphiaid)
   }
-  if (!is.null(tblList)) {
+  if (!is.null(tblList) & !is.null(plotSets)) {
     #strata are used to set plot bounds (filtered to sampled strata (from GSINF))
     limits1 <- sort(getBbox(filterVals = unique(tblList$GSINF$STRAT)))
-  }else{
-    limits1 <- c(0,0,0,0)
   }
   if (!is.null(catchStrataData)) {
-    #otherwise we can use the catchStrataData)
-    limits2 <- sort(getBbox(filterVals = unique(catchStrataData$STRAT)))
+    if (class(catchStrataData)=="list" & length(catchStrataData)>1){
+      message("catchStrataData can  multiple data frames, but only the first of these will be plotted (i.e.",names(catchStrataData[1]),").  To plot a different one, please set catchStrataData to the specific data frame you want to plot")
+      catchStrataData <- catchStrataData[[1]]
+    } else if (class(catchStrataData)=="list"){
+      catchStrataData <- catchStrataData[[1]]
+    }
+
+    if (is.null(plotSets)) limits1 <- sort(getBbox(filterVals = unique(catchStrataData$STRAT)))
     #if we have stratified catch data, we can't have filled contours
     if(plotBathy == "FILL")plotBathy <- "LINES"
-  }else{
-    limits2 <- c(0,0,0,0)
   }
 
-  limits <-c(pmin(limits1[1:2],limits2[1:2]), pmax(limits1[3:4],limits2[3:4]))
-  #round limits to nearest 30mins so that the bbox doesn't vary between successive plots of the same data
-  limits <- roundDD2Min(limits,nearestMin = 30)
+  limits <- c(roundDD2Min(limits1[1],nearestMin=15, how = "floor"), 
+              roundDD2Min(limits1[2],nearestMin=15, how = "ceiling"), 
+              roundDD2Min(limits1[3],nearestMin=15, how = "floor"), 
+              roundDD2Min(limits1[4],nearestMin=15, how = "ceiling"))
+
   #add plot elements to this list.
   ggItems <- list()
-  
+  sf::sf_use_s2(FALSE)
   #set up the basic plot
   p <-ggplot2::ggplot() + ggplot2::theme_bw()
-
   ggItems[["bathy"]]      <- ggBathy(plotBathy=plotBathy, bathyIntervals=bathyIntervals)
   ggItems[["bkgdStrata"]] <- ggStrata(plotStrata=plotStrata, plotLabels=labelStrata, filter=unique(tblList$GSINF$STRAT))
   ggItems[["bkgdNAFO"]]   <- ggNAFO(plotNAFO=plotNAFO, plotLabels=labelNAFO, filter=NULL)
@@ -124,12 +121,4 @@ plotRV <- function(tblList = NULL,
   ggItems[["labels"]] <- ggplot2::labs(x="Longitude", y="Latitude")
   p<-p+ggItems
   return(p)
-  # if (!is.null(plotCatchStrata)){
-  #   #can't plot bkgrd strata if the strata are to be plotted by catch
-  #   plotBkgdStrata <- FALSE
-  #   if (!plotCatchStrata %in% c("TOTNO", "TOTWGT", "MEAN_WGT", "MEAN_NO", "BIOMASS", "ABUND")) stop("plotCatchStrata must be either 'TOTNO', 'TOTWGT', 'MEAN_WGT', 'MEAN_NO', 'BIOMASS', 'ABUND' or NULL")
-  #   gg_stratData <- ggplot2::geom_sf(data = stratData, ggplot2::aes_string(fill=plotCatchStrata)) + ggplot2::scale_fill_continuous(name = paste0(plotCatchStrata, "\n(",unique(stratData[[g]]$TAXA),")"), direction = -1,type = "viridis",na.value = NA)
-  # }else{
-  #   gg_stratData<- NA
-  # } 
 }

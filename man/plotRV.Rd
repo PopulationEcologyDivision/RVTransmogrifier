@@ -6,17 +6,16 @@
 \usage{
 plotRV(
   tblList = NULL,
-  ptVar = "TOTWGT",
-  strataVar = "MEAN_WGT",
-  plotPts = TRUE,
+  plotSets = "TOTWGT",
+  plotNullSets = TRUE,
+  plotCatchStrata = "MEAN_WGT",
+  catchStrataData = NULL,
   plotStrata = TRUE,
-  code = NULL,
-  aphiaid = NULL,
-  title = "auto",
-  hideTitle = FALSE,
-  bathyRes = 4,
-  showNullsets = TRUE,
-  online = F,
+  labelStrata = TRUE,
+  plotBathy = "FILL",
+  bathyIntervals = 200,
+  plotNAFO = FALSE,
+  labelNAFO = FALSE,
   ...
 )
 }
@@ -24,45 +23,37 @@ plotRV(
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that
 should have filtering applied to them.}
 
-\item{ptVar}{the default is \code{"TOTWGT"}. Can also be \code{"TOTWGT"}.}
+\item{plotSets}{the default is \code{"TOTWGT"}, but can also be \code{"TOTWGT"}.  If set to \code{NULL},
+no catch data points will be plotted.}
 
-\item{strataVar}{the default is \code{"MEAN_WGT"}}
-
-\item{plotPts}{the default is \code{TRUE}.}
-
-\item{plotStrata}{the default is \code{TRUE}.}
-
-\item{code}{the default is \code{NULL}. If data should be limited to a particular species, enter 
-the species code here}
-
-\item{aphiaid}{the default is \code{NULL}. If data should be limited to a particular aphiaid, 
-enter the aphiaid here.}
-
-\item{title}{the default is \code{"auto"}. By default, if the plot will be titled by the species 
-available in the data. Changing this value will result in a custom title.}
-
-\item{hideTitle}{the default is \code{FALSE}. If the automatic title (i.e common names of species 
-present in the data) is not desired, set this to TRUE (or change the default value of \code{title})}
-
-\item{bathyRes}{the default is \code{4}. This is the resolution of the bathymetric data, in 
-minutes (sent directly to \code{marmap::getNOAA.bathy}).  If it is set to \code{NULL}, no 
-bathymetric data will be plotted, and plots will be much faster.}
-
-\item{showNullsets}{the default is \code{TRUE}.  If TRUE, sets where the specified species was not
+\item{plotNullSets}{the default is \code{TRUE}.  If TRUE, sets where the specified species was not
 caught will be plotted as '+'.  If FALSE, null sets will not be plotted.}
 
-\item{online}{the default is \code{FALSE}.}
+\item{plotCatchStrata}{the default is \code{"MEAN_WGT"}, but can be any of \code{"TOTNO"}, \code{"TOTWGT"}, 
+\code{"MEAN_WGT"}, \code{"MEAN_NO"}, \code{"BIOMASS"}, or \code{"ABUND"}. If set to \code{NULL},
+no strata will be plotted by catch.}
 
-\item{...}{other arguments passed to methods (e.g. 'debug' and 'quiet')}
+\item{catchStrataData}{the default is \code{NULL}. This is a stratified object resulting from running 
+\code{stratify}.  \code{stratify()} can generate multiple dfs within a list, but this parameter should
+be pointed to a single dataframe.}
+
+\item{plotBathy}{the default is \code{"FILL"}, but can be any of \code{"FILL"}, \code{"LINES"} or \code{NULL}.
+FILL results in progressively darker blue areas as depth increases. 
+LINES results in contour lines.
+NULL does not show any bathymetric information.}
+
+\item{bathyIntervals}{the default is \code{100} (m).  This is the difference in depth between contour lines.}
+
+\item{...}{other arguments passed to methods (e.g.'taxa', 'code', 'aphiaid', debug' and 'quiet')}
+
+\item{bkgdStrata}{the default is \code{TRUE}. Should strata lines be shown?}
 }
 \value{
 a ggplot object showing the positions of the data.  Null sets will be shown as + signs.
 }
 \description{
-This function .
-}
-\note{
-GSWARPOUT, GSCRUISELIST and GSSPEC can NOT be used to filter the other tables.
+This function can plot the list data resulting from \code{get_survey()} or from 
+\code{propagateChanges()}.
 }
 \author{
 Mike McMahon, \email{Mike.McMahon@dfo-mpo.gc.ca}

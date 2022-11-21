@@ -7,16 +7,16 @@
 #' @param years the default is \code{NULL}. This parameter allows you to generate datasets for one or
 #' more specific years.  A value of NULL will result in products being generated for all years for
 #' which data exists, and a vector of years will result in dataset that include the specified years.
-#' @param validTowsOnly the default is \code{TRUE}.  "Valid" survey tows (i.e. "type 1") are those 
+#' @param type1TowsOnly the default is \code{TRUE}.  "Valid" survey tows (i.e. "type 1") are those 
 #' tows that fished correctly, and can be used confidently while looking data from a stratified  
-#' random survey design.  Setting \code{validTowsOnly} to \code{FALSE} will allow other types of sets 
+#' random survey design.  Setting \code{type1TowsOnly} to \code{FALSE} will allow other types of sets 
 #' to be extracted, but these shouldn't be included while assessing fish stocks.
 #' @param ... other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')
 #' @returns a list of dataframes which have been filtered to only include data related to the 
 #' specified survey and years
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-getSurvey<-function(survey = NULL, years=NULL, validTowsOnly = TRUE,...){
+getSurvey<-function(survey = NULL, years=NULL, type1TowsOnly = TRUE,...){
   args <- list(...)
   keep_nullsets <- ifelse(is.null(args$keep_nullsets), T, args$keep_nullsets) 
   debug <- ifelse(is.null(args$debug), F, args$debug) 
@@ -35,7 +35,7 @@ getSurvey<-function(survey = NULL, years=NULL, validTowsOnly = TRUE,...){
   
 
 
-  if (validTowsOnly) tblList$GSINF <- tblList$GSINF[tblList$GSINF$TYPE==1,]
+  if (type1TowsOnly) tblList$GSINF <- tblList$GSINF[tblList$GSINF$TYPE==1,]
   if (!is.null(years)){
     tblList$GSMISSIONS <- tblList$GSMISSIONS[which(tblList$GSMISSIONS$YEAR %in% c(years)),]
   }
@@ -60,7 +60,7 @@ getSurvey<-function(survey = NULL, years=NULL, validTowsOnly = TRUE,...){
                                     code = args$code,
                                     aphiaid = args$aphiaid)
   }
-  tblList <- propagateChanges(tblList, keep_nullsets=keep_nullsets, quiet=T)
+  tblList <- propagateChanges(tblList, keep_nullsets=keep_nullsets, quiet=quiet)
   if (is.numeric(tblList))stop("Your query did not return valid results")
  
   return(tblList)
