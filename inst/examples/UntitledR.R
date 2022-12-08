@@ -2,7 +2,7 @@ if (F){
   library(RVSurveyData)
   library(Mar.utils)
   
-  library(dplyr)
+
   library(ggplot2)
   library(lubridate)
   library(mapdata)
@@ -13,14 +13,23 @@ if (F){
   library(stats)
   library(stringr)
   library(sf)
+  # bcEvent1000 <- read.table("c:/Users/McMahonM/Downloads/dwca-qcs-v1.2/event.txt", nrows = 1000, sep = "\t", header = T)
+  # bcOcc1000 <- read.table("c:/Users/McMahonM/Downloads/dwca-qcs-v1.2/occurrence.txt", nrows = 1000, sep = "\t", header=T)
+  # bcEMOF1000 <- read.table("c:/Users/McMahonM/Downloads/dwca-qcs-v1.2/extendedmeasurementorfact.txt", nrows = 1000, sep = "\t", header=T)
   
   sourcery()
-  
+  library(dplyr)
   #extract a survey's worth of data
   SUMMER2020_allSp <- getSurvey("SUMMER", years = 2020)
+  codSurv <- extractOBIS(survey = "4VSW", year=2006)
+  
+  obisTest <- extractOBIS(survey = c("SUMMER"), year=c(2003))
+  
   #simple plot call, filtering data to only cod (ie code = 10)
   plotRV(tblList = SUMMER2020_allSp, code=10, plotNullsets = T, plotSets ="TOTWGT", labelStrata = T)
-  
+  write.csv(obisTest$`SUMMER_2003`$EMOF, file = "SUMMER_2003_EMOF.csv", row.names = F)
+  write.csv(obisTest$`SUMMER_2003`$occurrence, file = "SUMMER_2003_occurrence.csv", row.names = F)
+  write.csv(obisTest$`SUMMER_2003`$eventCore, file = "SUMMER_2003_eventCore.csv", row.names = F)
   #Cod fun
   #Limit the data to just cod
   SUMMER2020_cod <- getSurvey("SUMMER", code = 10, years = 2020)

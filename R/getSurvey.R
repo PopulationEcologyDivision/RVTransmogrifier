@@ -20,7 +20,7 @@ getSurvey<-function(survey = NULL, years=NULL, type1TowsOnly = TRUE,...){
   args <- list(...)
   keep_nullsets <- ifelse(is.null(args$keep_nullsets), T, args$keep_nullsets) 
   debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), F, args$quiet) 
+  quiet <- ifelse(is.null(args$quiet), T, args$quiet) 
   
   if (is.null(survey)) stop("Please specify a value for 'survey'")
   survey <- toupper(survey)
@@ -61,7 +61,7 @@ getSurvey<-function(survey = NULL, years=NULL, type1TowsOnly = TRUE,...){
                                     aphiaid = args$aphiaid)
   }
   tblList <- propagateChanges(tblList, keep_nullsets=keep_nullsets, quiet=quiet)
-  if (is.numeric(tblList))stop("Your query did not return valid results")
+  if (is.numeric(tblList) & !quiet)message("Your query did not return valid results")
  
   return(tblList)
 }

@@ -23,7 +23,7 @@
 propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
   args <- list(...)
   debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), F, args$quiet)
+  quiet <- ifelse(is.null(args$quiet), T, args$quiet)
   recdTables <- names(tblList)
   essentialTables <- c("GSINF","GSCAT","GSMISSIONS","GSXTYPE","GSCURNT","GSFORCE","GSHOWOBT","GSSTRATUM","GSGEAR","GSSEX","GSSPECIES","GSWARPOUT","GSAUX","GSMATURITY","dataDETS","dataLF")
   if (length(setdiff(essentialTables,recdTables))>0) stop("Missing the following tables from your tblList object: ",paste(setdiff(essentialTables,recdTables), collapse=", "))
