@@ -104,7 +104,7 @@ filterSpecies <- function(tblList = NULL, code=NULL, aphiaid=NULL, taxa = NULL, 
     tblList$dataDETS <- merge(tblList$dataDETS, tblList$GSSPECIES[,c("CODE","TAXA_", "TAXARANK_")], by.x="SPEC", by.y="CODE")
   }
   tblList <- propagateChanges(tblList, quiet=T, keep_nullsets = keep_nullsets)
-  if (class(tblList)=="numeric"){
+  if (inherits(tblList,"numeric")){
     stop("Filter resulted in 0 records.")
   }
   return(tblList)

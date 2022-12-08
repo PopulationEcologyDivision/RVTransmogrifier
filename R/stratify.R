@@ -15,7 +15,7 @@ stratify <- function(tblList = NULL, ...){
                                   taxa = args$taxa,
                                   code = args$code,
                                   aphiaid = args$aphiaid)
-    if (class(tblList)=="numeric")stop("Requested filter removed all species")
+    if (inherits(tblList,"numeric"))stop("Requested filter removed all species")
     tblList      <- aggregateByTaxa(tblList = tblList,
                                     taxa = args$taxa,
                                     code = args$code,

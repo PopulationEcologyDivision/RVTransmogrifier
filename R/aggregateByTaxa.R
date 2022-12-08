@@ -2,6 +2,13 @@
 #' @description This function .
 #' @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes that
 #' should have filtering applied to them.
+#' @param code the default is \code{NULL}. If data should be limited to a particular species, enter 
+#' the species code here.
+#' @param aphiaid the default is \code{NULL}. If data should be limited to a particular aphiaid, 
+#' enter the aphiaid here.
+#' @param taxa the default is \code{NULL}. Any value found in any of "SCIENTIFICNAME", "KINGDOM", 
+#' "PHYLUM", "CLASS", "ORDER", "FAMILY", or "GENUS" can be specified (e.g. \code{taxa=c("GADIDAE")})
+
 #' @param ... other arguments passed to methods (e.g. 'debug' and 'quiet')
 #' @returns #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export

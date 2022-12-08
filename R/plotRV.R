@@ -13,7 +13,10 @@
 #' @param catchStrataData the default is \code{NULL}. This is a stratified object resulting from running 
 #' \code{stratify}.  \code{stratify()} can generate multiple dfs within a list, but this parameter should
 #' be pointed to a single dataframe.
-#' @param bkgdStrata the default is \code{TRUE}. Should strata lines be shown?
+#' @param plotStrata the default is \code{TRUE}. Should Maritimes strata be shown?
+#' @param labelStrata the default is \code{TRUE}. If they are shown, should Maritimes strata be labelled?
+#' @param plotNAFO the default is \code{TRUE}. Should NAFO areas be shown?
+#' @param labelNAFO the default is \code{TRUE}. If they are shown, should NAFO areas be labelled?
 #' @param plotBathy the default is \code{"FILL"}, but can be any of \code{"FILL"}, \code{"LINES"} or \code{NULL}.  
 #' FILL results in progressively darker blue areas as depth increases. 
 #' LINES results in contour lines.
@@ -41,7 +44,7 @@ plotRV <- function(tblList = NULL,
                                   taxa = args$taxa,
                                   code = args$code,
                                   aphiaid = args$aphiaid)
-    if (class(tblList)=="numeric")stop("Requested filter removed all species")
+    if (inherits(tblList,"numeric"))stop("Requested filter removed all species")
     tblList      <- aggregateByTaxa(tblList = tblList,
                                     taxa = args$taxa,
                                     code = args$code,
@@ -52,10 +55,10 @@ plotRV <- function(tblList = NULL,
     limits1 <- sort(getBbox(filterVals = unique(tblList$GSINF$STRAT)))
   }
   if (!is.null(catchStrataData)) {
-    if (class(catchStrataData)=="list" & length(catchStrataData)>1){
+    if (inherits(catchStrataData,"list") & length(catchStrataData)>1){
       message("catchStrataData can  multiple data frames, but only the first of these will be plotted (i.e.",names(catchStrataData[1]),").  To plot a different one, please set catchStrataData to the specific data frame you want to plot")
       catchStrataData <- catchStrataData[[1]]
-    } else if (class(catchStrataData)=="list"){
+    } else if (inherits(catchStrataData,"list")){
       catchStrataData <- catchStrataData[[1]]
     }
 

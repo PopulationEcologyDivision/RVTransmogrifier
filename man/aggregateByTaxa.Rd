@@ -10,6 +10,15 @@ aggregateByTaxa(tblList = NULL, code = NULL, aphiaid = NULL, taxa = NULL, ...)
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that
 should have filtering applied to them.}
 
+\item{code}{the default is \code{NULL}. If data should be limited to a particular species, enter 
+the species code here.}
+
+\item{aphiaid}{the default is \code{NULL}. If data should be limited to a particular aphiaid, 
+enter the aphiaid here.}
+
+\item{taxa}{the default is \code{NULL}. Any value found in any of "SCIENTIFICNAME", "KINGDOM", 
+"PHYLUM", "CLASS", "ORDER", "FAMILY", or "GENUS" can be specified (e.g. \code{taxa=c("GADIDAE")})}
+
 \item{...}{other arguments passed to methods (e.g. 'debug' and 'quiet')}
 }
 \value{

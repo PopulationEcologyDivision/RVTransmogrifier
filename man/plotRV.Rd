@@ -37,6 +37,10 @@ no strata will be plotted by catch.}
 \code{stratify}.  \code{stratify()} can generate multiple dfs within a list, but this parameter should
 be pointed to a single dataframe.}
 
+\item{plotStrata}{the default is \code{TRUE}. Should Maritimes strata be shown?}
+
+\item{labelStrata}{the default is \code{TRUE}. If they are shown, should Maritimes strata be labelled?}
+
 \item{plotBathy}{the default is \code{"FILL"}, but can be any of \code{"FILL"}, \code{"LINES"} or \code{NULL}.
 FILL results in progressively darker blue areas as depth increases. 
 LINES results in contour lines.
@@ -44,9 +48,11 @@ NULL does not show any bathymetric information.}
 
 \item{bathyIntervals}{the default is \code{100} (m).  This is the difference in depth between contour lines.}
 
-\item{...}{other arguments passed to methods (e.g.'taxa', 'code', 'aphiaid', debug' and 'quiet')}
+\item{plotNAFO}{the default is \code{TRUE}. Should NAFO areas be shown?}
 
-\item{bkgdStrata}{the default is \code{TRUE}. Should strata lines be shown?}
+\item{labelNAFO}{the default is \code{TRUE}. If they are shown, should NAFO areas be labelled?}
+
+\item{...}{other arguments passed to methods (e.g.'taxa', 'code', 'aphiaid', debug' and 'quiet')}
 }
 \value{
 a ggplot object showing the positions of the data.  Null sets will be shown as + signs.

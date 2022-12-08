@@ -2,4 +2,12 @@ utils::globalVariables(c("STRAT","SPEC","TOTWGT","TOTNO","BIOMASS","ABUND","MISS
                          "SDATE","ELAT_DD","SLONG_DD","SLAT_DD","ELONG_DD","STRAT","VESEL","CRUNO",
                          "SEASON", "time", "starttime", "eventDate1", "measurementValue", "eventID", 
                          "ID", "region", "long", "lat", "group", "x", "y", "z","tz", "dst","CLEN",
-                         "NAFO", "STRATA_ID"))
+                         "NAFO", "STRATA_ID",
+"AGE", "AREA_M2", "BOTTOM_SALINITY", "BOTTOM_TEMPERATURE", "DEPTH_M", "DIST", "DMAX_M",
+"DMIN_M", "DUR", "FLEN", "FMAT", "FSEX", "FSHNO", "FWT", "GEAR", "GEARDESC", "HOWD", "REMARKS",
+"SPECIMEN_ID", "SPEED", "SURFACE_TEMPERATURE", "TOTNO_RAW", "TOTWGT_RAW", "WSPREAD",
+"coordinateUncertaintyInMeters", "decimalLatitude", "decimalLongitude", "detID",
+"eventDate", "eventRemarks", "footprintSRS", "footprintWKT", "gearType", "geometry", "id",
+"individualCount", "locationRemarks", "measurement", "na.omit", "occurrenceID",
+"organismQuantity", "parentEventID", "sampleSizeUnit", "sampleSizeValue",
+"theCatch", "theSet", "type", "year"))
