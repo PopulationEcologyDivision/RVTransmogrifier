@@ -131,6 +131,9 @@ ggStrataData <- function(catchStrataData = NULL, plotField = NULL, filter=NULL){
   } else if ("TAXA_" %in% names(catchStrataData)){
     plotLabel <- catchStrataData$TAXA_[1]
   }
+  if (is.null(filter)){
+    strata <- RVSurveyData::strataMar_sf
+  }
   if(all(filter %in% c(396:411))){
     strata <- RVSurveyData::strataMar4VSW_sf 
   }else{

@@ -56,7 +56,7 @@ plotRV <- function(tblList = NULL,
   }
   if (!is.null(catchStrataData)) {
     if (inherits(catchStrataData,"list") & length(catchStrataData)>1){
-      message("catchStrataData can  multiple data frames, but only the first of these will be plotted (i.e.",names(catchStrataData[1]),").  To plot a different one, please set catchStrataData to the specific data frame you want to plot")
+      message("catchStrataData can contain multiple data frames, but only the first of these will be plotted (i.e.",names(catchStrataData[1]),").  To plot a different one, please set catchStrataData to the specific data frame you want to plot")
       catchStrataData <- catchStrataData[[1]]
     } else if (inherits(catchStrataData,"list")){
       catchStrataData <- catchStrataData[[1]]
@@ -84,7 +84,7 @@ plotRV <- function(tblList = NULL,
     if (plotCatchStrata == "BIOMASS")plotCatchStrata="BIOMASS_T"
     #   #can't plot bkgrd strata if the strata are to be plotted by catch
     ggItems[["bkgdStrata"]] <- NULL
-    ggItems[["gg_stratData"]] <- ggStrataData(catchStrataData = catchStrataData, plotField = plotCatchStrata)
+    ggItems[["gg_stratData"]] <- ggStrataData(catchStrataData = catchStrataData, plotField = plotCatchStrata, filter=unique(tblList$GSINF$STRAT))
   }else{
     ggItems[["gg_stratData"]]<- NULL
   } 

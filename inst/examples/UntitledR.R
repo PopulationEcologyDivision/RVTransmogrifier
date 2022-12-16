@@ -21,7 +21,8 @@ if (F){
   library(dplyr)
   #extract a survey's worth of data
   SUMMER2020_allSp <- getSurvey("SUMMER", years = 2020)
-  codSurv <- extractOBIS(survey = "4VSW", year=2006)
+  codSurv <- getSurvey("SUMMER", code = 10, year=2020)
+  echSurv <- getSurvey("SUMMER", taxa = "ECHINODERMATA", year=2020)
   
   obisTest <- extractOBIS(survey = c("SUMMER"), year=c(2003))
   
