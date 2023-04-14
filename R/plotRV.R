@@ -31,14 +31,15 @@ plotRV <- function(tblList = NULL,
                        plotCatchStrata = "MEAN_WGT", catchStrataData = NULL,
                        plotStrata = TRUE,labelStrata=TRUE,
                        plotBathy = "FILL", bathyIntervals=200,
-                       plotNAFO=FALSE, labelNAFO = FALSE,
-                       ...){
+                       plotNAFO=FALSE, labelNAFO = FALSE, ...){
   args <- list(...)
+  # if(is.null(args))args<- list()
+  # if(!is.null(args$code)) args$code <- newArgs$code
+  # if(!is.null(args$aphiaid)) args$aphiaid <- newArgs$aphiaid
+  # if(!is.null(args$taxa)) args$taxa <- newArgs$taxa
   debug <- ifelse(is.null(args$debug), F, args$debug) 
   quiet <- ifelse(is.null(args$quiet), F, args$quiet)
 
-
-  
   if(!is.null(args$taxa)|!is.null(args$code)|!is.null(args$aphiaid)){
     tblList      <- filterSpecies(tblList, keep_nullsets = T,
                                   taxa = args$taxa,
@@ -76,6 +77,7 @@ plotRV <- function(tblList = NULL,
   ggItems <- list()
   sf::sf_use_s2(FALSE)
   #set up the basic plot
+  browser()
   p <-ggplot2::ggplot() + ggplot2::theme_bw()
   ggItems[["bathy"]]      <- ggBathy(plotBathy=plotBathy, bathyIntervals=bathyIntervals)
   ggItems[["bkgdStrata"]] <- ggStrata(plotStrata=plotStrata, plotLabels=labelStrata, filter=unique(tblList$GSINF$STRAT))
@@ -98,14 +100,14 @@ plotRV <- function(tblList = NULL,
       catches <- tblList$GSCAT_agg
     }else{
       catches <- tblList$GSCAT
-      catches <- merge(catches, tblList$GSSPECIES[, c("CODE", "SCIENTIFICNAME","APHIAID")], by.x="SPEC", by.y="CODE")
+      catches <- merge(catches, tblList$GSSPECIES[, c("CODE", "SCI_NAME","APHIA_ID")], by.x="SPEC", by.y="CODE")
     }
     catches <- merge(catches, tblList$GSINF[,c("MISSION", "SETNO",'SLONG_DD', 'SLAT_DD')], by=c("MISSION", "SETNO"),all.y=T)
     if ("TAXA_" %in% names(catches)){
       t_field <- "TAXA_"
     }else{
       #if 2 fields sent, the format will be "t_field1 (t_field2)"
-      t_field <- c("SCIENTIFICNAME", "APHIAID")
+      t_field <- c("SCI_NAME", "APHIA_ID")
     }
     if (plotSets %in% c("TOTNO", "TOTWGT")) {
       catLeg <- ifelse(plotSets == "TOTWGT", "Total Weight (kgs)","Total Number")

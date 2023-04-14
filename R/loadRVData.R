@@ -5,14 +5,13 @@
 #' @returns a list of the ~18 data frames from the RVSurveyData package
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-loadRVData<- function(...){
-  args <- list(...)
-  debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), F, args$quiet) 
-  
+loadRVData<- function(args=NULL){
+  if(is.null(args))args<- list()
+  # args <- setDefaultArgs(args=args)
+  args <- set_defaults(args=args)
   tbls <- utils::data(package = "RVSurveyData")$results[,"Item"]
   dataEnv<-new.env()
   utils::data(package="RVSurveyData", list = tbls, envir = dataEnv)
   thedata <- as.list(dataEnv)
-  return(thedata)
+  return(invisible(thedata))
 }

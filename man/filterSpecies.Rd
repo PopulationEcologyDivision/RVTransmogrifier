@@ -9,8 +9,8 @@ filterSpecies(
   code = NULL,
   aphiaid = NULL,
   taxa = NULL,
-  keep_nullsets = T,
-  ...
+  keep_nullsets = NULL,
+  args = NULL
 )
 }
 \arguments{
@@ -23,7 +23,7 @@ the species code here}
 \item{aphiaid}{the default is \code{NULL}. If data should be limited to a particular aphiaid, 
 enter the aphiaid here.}
 
-\item{taxa}{the default is \code{NULL}. Any value found in any of "SCIENTIFICNAME", "KINGDOM", 
+\item{taxa}{the default is \code{NULL}. Any value found in any of "SCI_NAME", "KINGDOM", 
 "PHYLUM", "CLASS", "ORDER", "FAMILY", or "GENUS" can be specified (e.g. \code{taxa=c("GADIDAE")})}
 
 \item{keep_nullsets}{the default is \code{TRUE}.}

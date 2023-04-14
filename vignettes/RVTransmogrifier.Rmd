@@ -75,8 +75,8 @@ While the steps above were not particularly onerous, they required a degree of f
 Below is an example of using RVTransmogrify to extract the same Summer 2016 survey data.  `getSurvey()` results in a single list object that contains all of the individual data objects the survey.
 
 ```{r}
-SUMMER2016 <- getSurvey("SUMMER", years = 2016, code=10)
-nrow(SUMMER2016$GSINF)
+cod_2016_transmogrified <- getSurvey("SUMMER", years = 2016, code=10)
+nrow(cod_2016_transmogrified$GSINF)
 ```
 If we look at the number of rows remaining from each filtering method, we can see they're the same:
 ```{r}
@@ -87,16 +87,16 @@ paste("GSCAT:", nrow(GSCAT))
 paste("dataDETS:", nrow(dataDETS))
 
 message("RVTransmogrifier filtering")
-paste("SUMMER2016$GSMISSIONS:",nrow(SUMMER2016$GSMISSIONS))
-paste("SUMMER2016$GSINF:",nrow(SUMMER2016$GSINF))
-paste("SUMMER2016$GSCAT:",nrow(SUMMER2016$GSCAT))
-paste("SUMMER2016$dataDETS:",nrow(SUMMER2016$dataDETS))
+paste("cod_2016_transmogrified$GSMISSIONS:",nrow(cod_2016_transmogrified$GSMISSIONS))
+paste("cod_2016_transmogrified$GSINF:",nrow(cod_2016_transmogrified$GSINF))
+paste("cod_2016_transmogrified$GSCAT:",nrow(cod_2016_transmogrified$GSCAT))
+paste("cod_2016_transmogrified$dataDETS:",nrow(cod_2016_transmogrified$dataDETS))
 ```
 
 
 3. Merge together appropriate objects...
 ```{r}
-cod_2016 <- merge(catch_cod_2016, sets_2016, all.y=T, by=c("MISSION", "SETNO"))
+cod_2016_wrangled <- merge(GSCAT, GSINF, all.y=T, by=c("MISSION", "SETNO"))
 ```
 
 
@@ -105,13 +105,13 @@ cod_2016 <- merge(catch_cod_2016, sets_2016, all.y=T, by=c("MISSION", "SETNO"))
 ```{r, fig.width = 10}
 codPlot <-  ggplot2::ggplot()
 # add cod data
-codPlot <- codPlot + ggplot2::geom_point(data=cod_2016[!is.na(cod_2016$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD, size=TOTWGT), colour="blue")
+codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD, size=TOTWGT), colour="blue")
 #add nullsets
-codPlot <- codPlot + ggplot2::geom_point(data=cod_2016[is.na(cod_2016$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD), shape = 3, colour="black", size = 2)
+codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[is.na(cod_2016_wrangled$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD), shape = 3, colour="black", size = 2)
 # add some land
 codPlot <- codPlot + ggplot2::geom_polygon(data = RVSurveyData::maritimesLand, ggplot2::aes(x = long, y = lat, group = group), fill = "darkgrey", color = NA) 
 # set the extent of the plot using the data
-limits<- c(range(cod_2016[!is.na(cod_2016$TOTWGT),"SLONG_DD"]),range(cod_2016[!is.na(cod_2016$TOTWGT),"SLAT_DD"]))
+limits<- c(range(cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),"SLONG_DD"]),range(cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),"SLAT_DD"]))
 codPlot <- codPlot + ggplot2::coord_sf(xlim = c(limits[1],limits[2]), ylim = c(limits[3], limits[4]))
 # pretty up the labels a bit
 codPlot <- codPlot + ggplot2::labs(x="Longitude", y="Latitude", size = "Total Weight (kgs)")
@@ -120,7 +120,7 @@ codPlot
 ```
 The results above do make a reasonable plot, but they took quite a few steps.  Further, the plotted data includes a number of points which shouldn't be used for assessing fish stocks (shown in red, below).
 ```{r, fig.width = 10}
-codPlot <- codPlot + ggplot2::geom_point(data=cod_2016[cod_2016$TYPE!=1,], aes(x = SLONG_DD, y=SLAT_DD), shape = 4, colour="red", size = 4)
+codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[cod_2016_wrangled$TYPE!=1,], aes(x = SLONG_DD, y=SLAT_DD), shape = 4, colour="red", size = 4)
 codPlot
 ```
 
@@ -132,26 +132,26 @@ RVTransmogrifier reduces all of the steps above into
 The data can be viewed relatively easily.  Below, we list the names of all of the objects, and get 
 the first few records of some of them.
 ```{r}
-names(SUMMER2016)
+names(cod_2016_transmogrified)
 
-head(SUMMER2016$GSCAT)
-head(SUMMER2016$GSINF)
-head(SUMMER2016$GSSPECIES)
+head(cod_2016_transmogrified$GSCAT)
+head(cod_2016_transmogrified$GSINF)
+head(cod_2016_transmogrified$GSSPECIES)
 ```
 
 Generating a plot of the same cod data is made easier through the `plotRV()` function.  Additionally, the plot is a bit more polished and can include bathymetry:
 
 ```{r, fig.width = 10,  warning=FALSE}
-plotRV(SUMMER2016, code=10, plotSets = "TOTWGT", plotBathy = "FILL")  
+plotRV(cod_2016_transmogrified, plotSets = "TOTWGT", plotBathy = "FILL")  
 ```
-Because all of the data is held in the same object, generating plots for a number of species at once becomes straightforward:
-```{r, fig.width = 15,  warning=FALSE}
-species <- c(14,42,2550) #, Silver hake/yellowtail flounder/lobster
-for (s in species){
-  spPlot <- plotRV(SUMMER2016, code=s, plotSets = "TOTWGT", plotBathy = "FILL")
-  print(spPlot)
-}
-```
+<!-- Because all of the data is held in the same object, generating plots for a number of species at once becomes straightforward: -->
+<!-- ```{r, fig.width = 15,  warning=FALSE} -->
+<!-- species <- c(14,42,2550) #, Silver hake/yellowtail flounder/lobster -->
+<!-- for (s in species){ -->
+<!--   spPlot <- plotRV(cod_2016_transmogrified, code=s, plotSets = "TOTWGT", plotBathy = "FILL") -->
+<!--   print(spPlot) -->
+<!-- } -->
+<!-- ``` -->
 
 
 ## extractFGP - Generating Data for Open Data Canada

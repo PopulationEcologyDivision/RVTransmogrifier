@@ -3,7 +3,16 @@
 #' and a tow 'type'. This function ensures that all those values are combined correctly to get the 
 #' valid data for a survey.
 #' @param survey the default is \code{NULL}. This specifies which survey should be extracted.  Valid
-#' values are "SPRING", "SUMMER", "FALL", and "4VSW". 
+#' values are:
+#' \itemize{
+#' \item \code{4X} - Type 1; Spring (i.e. months 1:4); 2008+; specific strata 
+#' \item \code{GEORGES} - Type 1; Spring (i.e. months 1:4); strata 5Z*
+#' \item \code{SPRING} - Type 1; Spring (i.e. months 1:4); pre-2008; specific strata 
+#' \item \code{4VSW}  - Type 1; Spring (i.e. months 1:4); 4VSW strata;  
+#' \item \code{SUMMER} - Type 1; Summer (i.e. months 5:8); strata 440:495 - the "standard" strata
+#' \item \code{SUMMER_ALL} - Type 1; Summer (i.e. months 5:8); strata 434:559+5Z*
+#' \item \code{FALL} - Type 1; Fall (i.e. months 9:12)
+#' }
 #' @param years the default is \code{NULL}. This parameter allows you to generate datasets for one or
 #' more specific years.  A value of NULL will result in products being generated for all years for
 #' which data exists, and a vector of years will result in dataset that include the specified years.
@@ -16,52 +25,79 @@
 #' specified survey and years
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-getSurvey<-function(survey = NULL, years=NULL, type1TowsOnly = TRUE,...){
-  args <- list(...)
-  keep_nullsets <- ifelse(is.null(args$keep_nullsets), T, args$keep_nullsets) 
-  debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), T, args$quiet) 
-  
+getSurvey<-function(survey = NULL, years=NULL, type1TowsOnly = TRUE, args=NULL, ...){
+  newArgs <- list(...)
+  if(is.null(args))args<- list()
+  if(!is.null(newArgs$code)) args$code <- newArgs$code
+  if(!is.null(newArgs$aphiaid)) args$aphiaid <- newArgs$aphiaid
+  if(!is.null(newArgs$taxa)) args$taxa <- newArgs$taxa
+  if(!is.null(newArgs$taxaAgg)) args$taxaAgg <- newArgs$taxaAgg
+  if(!is.null(newArgs$keep_nullsets)) args$keep_nullsets <- newArgs$keep_nullsets
+  args$type1TowsOnly <- type1TowsOnly
+  # args <- setDefaultArgs(args=args)
+  args <- set_defaults(args=args)
   if (is.null(survey)) stop("Please specify a value for 'survey'")
+  tblList <- loadRVData(args=args)
   survey <- toupper(survey)
-  
-  months <- switch(survey,
-                   "SPRING" = c(1,2,3,4),
-                   "SUMMER" = c(5,6,7,8),
-                   "FALL" = c(9,10,11,12),
-                   "4VSW" = -1
-  )
-  tblList <- loadRVData()
-  
-
-
-  if (type1TowsOnly) tblList$GSINF <- tblList$GSINF[tblList$GSINF$TYPE==1,]
+  if (args$type1TowsOnly) tblList$GSINF <- tblList$GSINF[tblList$GSINF$TYPE==1,]
   if (!is.null(years)){
     tblList$GSMISSIONS <- tblList$GSMISSIONS[which(tblList$GSMISSIONS$YEAR %in% c(years)),]
   }
-  if (survey != "4VSW"){
-    #get rid of 4VSW cod data
-    tblList$GSINF <- tblList$GSINF[-which(tblList$GSINF$STRAT %in% c(396:411)
-                                            & lubridate::month(tblList$GSINF$SDATE) %in% c(1,2,3,4)),]
-    #retain appropriate months
-    tblList$GSINF <- tblList$GSINF[which(lubridate::month(tblList$GSINF$SDATE) %in% months),]
-  }else{
-    tblList$GSINF <- tblList$GSINF[which(tblList$GSINF$STRAT %in% c(396:411)
-                                           & lubridate::month(tblList$GSINF$SDATE) %in% c(1,2,3,4)),]
+  if (survey %in% c("4VSW", "4X", "GEORGES", "SPRING")){
+    tblList$GSINF <- tblList$GSINF[-which(lubridate::month(tblList$GSINF$SDATE) %in% c(1,2,3,4)),]
+    if(survey == "4VSW"){
+      tblList$GSINF <- tblList$GSINF[tblList$GSINF$STRAT %in% c('396','397', '398', '399', '400', 
+                                                     '401', '402', '403', '404', '405', '406', '407', 
+                                                     '408', '409', '410', '411'),]
+    }else if (survey=="4X"){
+      tblList$GSINF <- tblList$GSINF[tblList$GSINF$STRAT %in% c('434', '436', '437', '438', '439', 
+                                         '440', '441', '442', '443', '444', '445', '446', '447', 
+                                         '448', '449', '450', '451', '452', '453', '454', '455', 
+                                         '456', '457', '458', '459', '460', '461', '462', '463', 
+                                         '464', '465', '466', '470', '471', '472', '473', '474', 
+                                         '475', '476', '477', '478', '480', '481', '482', '483', 
+                                         '484', '485', '490', '491', '492', '493', '494', '495', 
+                                         '496', '497', '498', '501', '502', '503', '504', '505', 
+                                         '557', '558', '559'),]
+    }else if (survey=="GEORGES"){
+      tblList$GSINF <- tblList$GSINF[tblList$GSINF$STRAT %in% c("5Z1", "5Z2", "5Z3", "5Z4", "5Z5", 
+                                                                "5Z6", "5Z7", "5Z8", "5Z9"),]
+    }else if (survey=="SPRING"){
+      tblList$GSMISSIONS <- tblList$GSMISSIONS[tblList$GSMISSIONS$YEAR < 2008,]
+      tblList$GSINF <- tblList$GSINF[!grepl(pattern = "5Z", x = tblList$GSINF$STRAT) &
+                              !(tblList$GSINF$STRAT %in% c('396','397', '398', '399', '400', '401', 
+                                                           '402', '403', '404', '405', '406', '407', 
+                                                           '408', '409', '410', '411', '551', '552', 
+                                                           '553', '554', '555', '556', '557', '558', 
+                                                           '559')),]
+    }
+  }else if (survey=="SUMMER"){
+    tblList$GSINF <- tblList$GSINF[which(lubridate::month(tblList$GSINF$SDATE) %in% c(5,6,7,8)),]
+    tblList$GSINF <- tblList$GSINF[tblList$GSINF$STRAT %in% c(
+                       "440", "441", "442", "443", "444", "445", "446", "447", "448", "449", "450", 
+                       "451", "452", "453", "454", "455", "456", "457", "458", "459", "460", "461", 
+                       "462", "463", "464", "465", "466", "470", "471", "472", "473", "474", "475", 
+                       "476", "477", "478", "480", "481", "482", "483", "484", "485", "490", "491", 
+                       "492", "493", "494", "495"),]
+  }else if (survey=="SUMMER_ALL"){
+    tblList$GSINF <- tblList$GSINF[which(lubridate::month(tblList$GSINF$SDATE) %in% c(5,6,7,8)),]
+    tblList$GSINF <- tblList$GSINF[tblList$GSINF$STRAT %in% c("434", "436", "437", "438", "439", #1971 only, Gulf region
+                        "440", "441", "442", "443", "444", "445", "446", "447", "448", "449", "450", 
+                        "451", "452", "453", "454", "455", "456", "457", "458", "459", "460", "461", 
+                        "462", "463", "464", "465", "466", "470", "471", "472", "473", "474", "475", 
+                        "476", "477", "478", "480", "481", "482", "483", "484", "485", "490", "491", 
+                        "492", "493", "494", "495", "496", "497", "498", "501", "502", "503", "504", 
+                        "505", "557", "558", "559", "5Z1", "5Z2", "5Z3", "5Z4", "5Z5", "5Z6", "5Z7", 
+                        "5Z8", "5Z9"),]
+  }else if (survey== "FALL"){
+    tblList$GSINF <- tblList$GSINF[-which(lubridate::month(tblList$GSINF$SDATE) %in% c(9,10,11,12)),]
+    
   }
-  if(!is.null(args$taxa)|!is.null(args$code)|!is.null(args$aphiaid)){
-    tblList      <- filterSpecies(tblList, keep_nullsets = keep_nullsets,
-                                  taxa = args$taxa,
-                                  code = args$code,
-                                  aphiaid = args$aphiaid)
-    if (inherits(tblList,"numeric"))stop("Requested filter removed all species")
-    tblList      <- aggregateByTaxa(tblList = tblList,
-                                    taxa = args$taxa,
-                                    code = args$code,
-                                    aphiaid = args$aphiaid)
-  }
-  tblList <- propagateChanges(tblList, keep_nullsets=keep_nullsets, quiet=quiet)
-  if (is.numeric(tblList) & !quiet)message("Your query did not return valid results")
- 
+  tblList <- filterSpecies(tblList = tblList, 
+                           code=args$code, 
+                           aphiaid=args$aphiaid, 
+                           taxa = args$taxa, 
+                           taxaAgg = args$taxaAgg, 
+                           keep_nullsets=args$keep_nullsets)
   return(tblList)
 }

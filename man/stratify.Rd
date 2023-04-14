@@ -4,7 +4,7 @@
 \alias{stratify}
 \title{stratify}
 \usage{
-stratify(tblList = NULL, ...)
+stratify(tblList = NULL, bySex = F, ignoreLgrp = F, ...)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes. Prior 

@@ -4,7 +4,7 @@
 \alias{propagateChanges}
 \title{propagateChanges}
 \usage{
-propagateChanges(tblList = NULL, keep_nullsets = FALSE, ...)
+propagateChanges(tblList = NULL, keep_nullsets = NULL, args = NULL)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that

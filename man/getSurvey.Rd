@@ -4,7 +4,7 @@
 \alias{getSurvey}
 \title{getSurvey}
 \usage{
-getSurvey(survey = NULL, years = NULL, type1TowsOnly = TRUE, ...)
+getSurvey(survey = NULL, years = NULL, type1TowsOnly = TRUE, args = NULL, ...)
 }
 \arguments{
 \item{survey}{the default is \code{NULL}. This specifies which survey should be extracted.  Valid

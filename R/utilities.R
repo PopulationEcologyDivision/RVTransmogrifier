@@ -1,3 +1,53 @@
+st_err <- function (x = NULL) {
+  stats::sd(x)/sqrt(length(x))
+}
+combine_lists <- function(primary = NULL, ancilliary = NULL){ 
+  new <- ancilliary[setdiff(names(ancilliary),names(primary))]
+  # discarded <- ancilliary[intersect(names(ancilliary),names(primary))]
+  kept <- c(primary, new)
+  return(kept)
+}
+
+set_defaults <- function(debug = FALSE, 
+                         quiet = TRUE, 
+                         type1TowsOnly = TRUE,
+                         keep_nullsets= TRUE, 
+                         towDist = 1.75, 
+                         code = NULL, 
+                         aphiaid = NULL, 
+                         taxa= NULL, 
+                         taxaAgg = FALSE, ...){
+  defaults <- as.list(environment())
+  sentArgs <- list(...)
+  #ensure hardcoded args take priority over user args
+  submittedArgs <- combine_lists(primary = sentArgs$argsFn, ancilliary = sentArgs$argsUser)
+  #ensure submitted args take priority over default args
+  argg <- combine_lists(primary =  submittedArgs, ancilliary = defaults)
+  return(argg)
+}
+
+# setDefaultArgs <- function(args =NULL){
+#   if(is.null(args))args<- list()
+#   if (is.null(args$keep_nullsets))args$keep_nullsets <- TRUE
+#   if (is.null(args$debug))args$debug <- FALSE
+#   if (is.null(args$quiet))args$quiet <- FALSE
+#   if(!is.null(args$taxa)) args$taxa <- toupper(args$taxa)
+#   if (is.null(args$taxaAgg))args$taxaAgg <- FALSE
+#   return(args)
+# }
+binSizes <- function(bin, value){
+  (floor(value/bin)*bin) + ((bin*.5)-0.5)  
+}
+
+expandDF <- function(templateDF = NULL, keyFields = NULL, expandField= NULL, expandVals = NULL){
+  #This function takes a df and repeats some key fields for each value found in expandVals
+  if (is.null(expandField))stop("expandField must have a value")
+  newDF<- unique(templateDF[,keyFields])
+  newDF <- merge(unique(newDF), expandVals)
+  colnames(newDF)[colnames(newDF)=="y"] <- expandField
+  return(newDF)
+}
+
 #' @title addTUNITS
 #' @description This function .
 #' @param stratum the default is \code{NULL}. This is a dataframe of strata, each with an AREA field
@@ -108,11 +158,10 @@ ggCatchPts <- function(catchdata = NULL, sizeVar=NULL, colourVar = NULL, return=
   ggItems<- list()
   if (return=="CATCHES"){
     if(length(colourVar)>1){
-      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes_string(x="SLONG_DD", y="SLAT_DD", size = sizeVar, colour=colourVar[1]), alpha = 0.6)
-      ggItems[["catchPts"]] <- c(ggItems[["catchPts"]],ggplot2::scale_color_discrete(name=colourVar[1],
-                                                                                     labels=paste0(catchdata[!is.na(catchdata[,sizeVar]),colourVar[1]]," (",catchdata[!is.na(catchdata[,sizeVar]),colourVar[2]],")")))
+      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes(x=SLONG_DD, y=SLAT_DD, size = sizeVar, colour=colourVar[1]), alpha = 0.6)
+      ggItems[["catchPts"]] <- c(ggItems[["catchPts"]],ggplot2::scale_color_discrete(name=colourVar[1], labels=paste0(catchdata[!is.na(catchdata[,sizeVar]),colourVar[1]]," (",catchdata[!is.na(catchdata[,sizeVar]),colourVar[2]],")")))
     }else{
-      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes_string(x="SLONG_DD", y="SLAT_DD", size = sizeVar, colour=colourVar), alpha = 0.6)
+      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes(x=SLONG_DD, y=SLAT_DD, size = sizeVar, colour=colourVar), alpha = 0.6)
     }
     ggItems[["catchPts"]] <- c(ggItems[["catchPts"]], ggplot2::scale_size_continuous(range = c(2,8)))
   }

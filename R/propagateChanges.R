@@ -20,23 +20,25 @@
 #' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @note GSWARPOUT, GSCRUISELIST and GSSPEC can NOT be used to filter the other tables.
 #' @export
-propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
-  args <- list(...)
-  debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), T, args$quiet)
+propagateChanges<-function(tblList = NULL, keep_nullsets=NULL, args=NULL){
+  return(tblList)
+  if(F){
+  if(is.null(args))args<- list()
+  if(!is.null(keep_nullsets)) args$keep_nullsets <- keep_nullsets
+  args <- setDefaultArgs(args=args)
   recdTables <- names(tblList)
   essentialTables <- c("GSINF","GSCAT","GSMISSIONS","GSXTYPE","GSCURNT","GSFORCE","GSHOWOBT","GSSTRATUM","GSGEAR","GSSEX","GSSPECIES","GSWARPOUT","GSAUX","GSMATURITY","dataDETS","dataLF")
   if (length(setdiff(essentialTables,recdTables))>0) stop("Missing the following tables from your tblList object: ",paste(setdiff(essentialTables,recdTables), collapse=", "))
   LOOPAGAIN <- T
 
-  if (!quiet) message("filtering")
+  # if (!args$quiet) message("filtering")
   while (LOOPAGAIN){
     precnt = sum(sapply(tblList, NROW))
     # limit GSINF
-    tblList$GSINF <- merge(tblList$GSINF, unique(tblList$GSCAT[,c("MISSION","SETNO")]), all.x=keep_nullsets )
+    tblList$GSINF <- merge(tblList$GSINF, unique(tblList$GSCAT[,c("MISSION","SETNO")]), all.x=args$keep_nullsets )
     tblList$GSINF <- merge(tblList$GSINF,  unique(tblList$GSMISSIONS[,"MISSION",drop=F]))
     if (nrow(tblList$GSINF)==0){
-      if (!quiet)message("No sets remain - quitting")
+      if (!args$quiet)message("No sets remain - quitting")
       return(-1)
     }
     # limited by GSINF
@@ -51,12 +53,13 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
     tblList$GSHOWOBT   <- tblList$GSHOWOBT[which(tblList$GSHOWOBT$HOWOBT %in% c(unique(tblList$GSINF$HOWD),unique(tblList$GSINF$HOWS))) ,]
     
     # limit GSCAT
-    tblList$GSCAT      <- merge(tblList$GSCAT,      unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=keep_nullsets )
+    tblList$GSCAT      <- merge(tblList$GSCAT,      unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=args$keep_nullsets )
     tblList$GSCAT      <- merge(tblList$GSCAT,      unique(tblList$GSSPECIES[,"CODE",drop=F]), by.x="SPEC", by.y  ="CODE")
     if (nrow(tblList$GSCAT)==0){
-      if (!quiet)message("No catch records remain - quitting")
+      if (!args$quiet)message("No catch records remain - quitting")
       return(-1)
     }
+    message("hardcoded SPEC")
     # limited by GSCAT
     tblList$dataDETS   <- merge(tblList$dataDETS,   unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")])) 
     tblList$dataLF     <- merge(tblList$dataLF,     unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")]))
@@ -70,7 +73,7 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
     
     # limit dataDETS
     tblList$dataDETS     <- merge(tblList$dataDETS,   unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")]))
-    tblList$dataDETS     <- merge(tblList$dataDETS,   unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=keep_nullsets)
+    tblList$dataDETS     <- merge(tblList$dataDETS,   unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=args$keep_nullsets)
     # limited by dataDETS
     tblList$GSMATURITY   <- merge(tblList$GSMATURITY, unique(tblList$dataDETS[,"FMAT",drop=F]), by.x="CODE", by.y="FMAT")
     tblList$GSSEX        <- merge(tblList$GSSEX,      unique(tblList$dataDETS[,"FSEX",drop=F]), by.x="CODE", by.y="FSEX")
@@ -78,7 +81,7 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
     
     #these limit dataLF
     tblList$dataLF       <- merge(tblList$dataLF,     unique(tblList$GSCAT[,c("MISSION","SETNO", "SPEC")]))
-    tblList$dataLF       <- merge(tblList$dataLF,     unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=keep_nullsets)
+    tblList$dataLF       <- merge(tblList$dataLF,     unique(tblList$GSINF[,c("MISSION","SETNO")]), all.y=args$keep_nullsets)
     
     #these are limited by dataLF
     tblList$GSMATURITY   <- merge(tblList$GSMATURITY, unique(tblList$dataDETS[,"FMAT",drop=F]), by.x="CODE", by.y="FMAT")
@@ -92,9 +95,9 @@ propagateChanges<-function(tblList = NULL, keep_nullsets=FALSE, ...){
     if(postcnt==precnt) {
       LOOPAGAIN=FALSE
     } else{
-      if (!quiet) message(".")
-      if (!quiet) print(sapply(tblList, NROW))
+      # if (!args$quiet) print(sapply(tblList, NROW))
     }
   }
   return(tblList)
+}
 }

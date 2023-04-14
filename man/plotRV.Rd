@@ -16,6 +16,7 @@ plotRV(
   bathyIntervals = 200,
   plotNAFO = FALSE,
   labelNAFO = FALSE,
+  args = args,
   ...
 )
 }

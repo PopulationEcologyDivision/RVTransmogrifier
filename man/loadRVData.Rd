@@ -4,7 +4,7 @@
 \alias{loadRVData}
 \title{loadRVData}
 \usage{
-loadRVData(...)
+loadRVData(args = NULL)
 }
 \arguments{
 \item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}

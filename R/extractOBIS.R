@@ -32,14 +32,14 @@ extractOBIS <- function(survey = NULL, years = NULL, ...){
   #generate taxonomic df
   
   doOBIS <- function(data = NULL, thisSurv = NULL, thisYear = NULL, ...){
-    
+    message("data$VALID_SPP is no longer a thing")
     taxonomicInfo <- function(data = NULL,SPEC = NULL,...){
       species_taxa <- data[data$CODE %in% SPEC &
-                             !is.na(data$APHIAID) &
-                             data$VALID_SPP==1,c("SCIENTIFICNAME",  #"scientificName"
+                             !is.na(data$APHIA_ID) &
+                             data$VALID_SPP==1,c("SCI_NAME",       #"scientificName"
                                                  "COMM",            #"vernacularName"
                                                  "CODE",            #"SPEC"
-                                                 "APHIAID",         #"AphiaID"
+                                                 "APHIA_ID",         #"AphiaID"
                                                  "AUTHORITY",       #"scientificNameAuthorship"
                                                  "KINGDOM",         #"kingdom"
                                                  "PHYLUM",          #"phylum"
@@ -49,14 +49,14 @@ extractOBIS <- function(survey = NULL, years = NULL, ...){
                                                  "GENUS",            #"genus"
                                                  "RANK"
                              )]
-      species_taxa$scientificNameID <- paste0("urn:lsid:marinespecies.org:taxname:",species_taxa$APHIAID)
-      species_taxa$specificEpithet <- sub('^.* ([[:alnum:]]+)$', '\\1', species_taxa$SCIENTIFICNAME)
-      species_taxa[which(species_taxa$SCIENTIFICNAME == species_taxa$specificEpithet),"specificEpithet"] <- NA
+      species_taxa$scientificNameID <- paste0("urn:lsid:marinespecies.org:taxname:",species_taxa$APHIA_ID)
+      species_taxa$specificEpithet <- sub('^.* ([[:alnum:]]+)$', '\\1', species_taxa$SCI_NAME)
+      species_taxa[which(species_taxa$SCI_NAME == species_taxa$specificEpithet),"specificEpithet"] <- NA
       
-      colnames(species_taxa)[colnames(species_taxa)=="SCIENTIFICNAME"] <- "scientificName"
+      colnames(species_taxa)[colnames(species_taxa)=="SCI_NAME"] <- "scientificName"
       colnames(species_taxa)[colnames(species_taxa)=="COMM"] <- "vernacularName"
       colnames(species_taxa)[colnames(species_taxa)=="AUTHORITY"] <- "scientificNameAuthorship"
-      colnames(species_taxa)[colnames(species_taxa)=="APHIAID"] <- "AphiaID"
+      colnames(species_taxa)[colnames(species_taxa)=="APHIA_ID"] <- "AphiaID"
       colnames(species_taxa)[colnames(species_taxa)=="CODE"] <- "SPEC"
       colnames(species_taxa)[colnames(species_taxa)=="KINGDOM"] <- "kingdom"
       colnames(species_taxa)[colnames(species_taxa)=="PHYLUM"]  <- "phylum"
