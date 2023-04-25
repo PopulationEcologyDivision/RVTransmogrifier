@@ -25,19 +25,18 @@
 #' specified survey and years
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-getSurvey<-function(survey = NULL, years=NULL, type1TowsOnly = TRUE, args=NULL, ...){
-  newArgs <- list(...)
-  if(is.null(args))args<- list()
-  if(!is.null(newArgs$code)) args$code <- newArgs$code
-  if(!is.null(newArgs$aphiaid)) args$aphiaid <- newArgs$aphiaid
-  if(!is.null(newArgs$taxa)) args$taxa <- newArgs$taxa
-  if(!is.null(newArgs$taxaAgg)) args$taxaAgg <- newArgs$taxaAgg
-  if(!is.null(newArgs$keep_nullsets)) args$keep_nullsets <- newArgs$keep_nullsets
-  args$type1TowsOnly <- type1TowsOnly
-  # args <- setDefaultArgs(args=args)
-  args <- set_defaults(args=args)
+getSurvey<-function(survey = NULL, years=NULL, ...){
+  argsFn <- as.list(environment())
+  argsFn[["tblList"]] <- NULL
+  argsUser <- list(...)
+  args <- do.call(set_defaults, list(argsFn=argsFn, argsUser=argsUser))
+  if(args$debug){
+    startTime <- Sys.time()
+    thisFun <- where_now()
+    message(thisFun, ": started")
+  }
   if (is.null(survey)) stop("Please specify a value for 'survey'")
-  tblList <- loadRVData(args=args)
+  tblList <- loadRVData(...)
   survey <- toupper(survey)
   if (args$type1TowsOnly) tblList$GSINF <- tblList$GSINF[tblList$GSINF$TYPE==1,]
   if (!is.null(years)){
@@ -93,11 +92,8 @@ getSurvey<-function(survey = NULL, years=NULL, type1TowsOnly = TRUE, args=NULL, 
     tblList$GSINF <- tblList$GSINF[-which(lubridate::month(tblList$GSINF$SDATE) %in% c(9,10,11,12)),]
     
   }
-  tblList <- filterSpecies(tblList = tblList, 
-                           code=args$code, 
-                           aphiaid=args$aphiaid, 
-                           taxa = args$taxa, 
-                           taxaAgg = args$taxaAgg, 
-                           keep_nullsets=args$keep_nullsets)
+  tblList<-propagateChanges(tblList = tblList, taxaAgg=F,...)
+  tblList <- filterSpecies(tblList = tblList, ...)
+  if(args$debug) message(thisFun, ": completed (",round( difftime(Sys.time(),startTime,units = "secs"),0),"s)")
   return(tblList)
 }

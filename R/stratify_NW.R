@@ -8,24 +8,29 @@
 #' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @importFrom dplyr %>%
 #' @export
-stratify_NW<-function(tblList = NULL, dfNWSets= NULL, ...){
-  args <- list(...)
-  debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), F, args$quiet)
-  #get rid of records where n known taxa were caught
+stratify_NW<-function(tblList = NULL, dfNWSets= NULL, stratInfo = NULL, ...){
+  argsFn <- as.list(environment())
+  argsFn[["tblList"]] <- NULL
+  argsFn[["dfNWSets"]] <- NULL
+  argsUser <- list(...)
+  args <- do.call(set_defaults, list(argsFn=argsFn, argsUser=argsUser))
+  if(args$debug){
+    startTime <- Sys.time()
+    thisFun <- where_now()
+    message(thisFun, ": started")
+  }
   res_nw <- list()
 
-  stratInfo <- tblList$GSSTRATUM
-  stratInfo <- addTUNITS(stratInfo)
-  tmp <- merge(dfNWSets,stratInfo, by = 'STRAT')
-  colnames(tmp)[colnames(tmp)=="AREA"] <- "SQNM"
-
-  strat_inf <- tmp %>% 
-    select(TOTWGT,STRAT, DMIN, DMAX, SQNM, DEPTH, NAME, TUNITS) %>% 
+  nw_set <- merge(dfNWSets,stratInfo, by = 'STRAT')
+  nw_set$BIOMASS_<-nw_set$TOTWGT*nw_set$TUNITS
+  nw_set$ABUND_<-nw_set$TOTNO*nw_set$TUNITS
+  
+   
+  strat_inf <- nw_set %>% 
+    select(TOTWGT,STRAT, NAME, SQNM) %>%  #DMIN, DMAX, , DEPTH, TUNITS 
     mutate(SOMECATCH = ifelse(TOTWGT>0, 1, 0),
-           AREA_CALC= SQNM* SOMECATCH,
-           TUNITS = round(TUNITS, 5)) %>% 
-    dplyr::group_by(STRAT,  DMIN, DMAX, SQNM, DEPTH, NAME, TUNITS) %>%
+           AREA_CALC= SQNM* SOMECATCH) %>% 
+    dplyr::group_by(STRAT,  NAME) %>%
     dplyr::summarise(AREAPROP = round(mean(SOMECATCH),3), 
                      AREACNT  = length(SOMECATCH),
                      AREAPROPSTERR = round(st_err(SOMECATCH),5),
@@ -35,19 +40,12 @@ stratify_NW<-function(tblList = NULL, dfNWSets= NULL, ...){
     arrange(STRAT) %>% 
     as.data.frame()
   
-  #####
-  res_nw$strat_inf <- strat_inf
-  #####
-  res_nw$nw_set <- tmp[,c("MISSION", "STRAT", "SQNM", "SETNO", "TOTNO", "TOTWGT")] %>% arrange(MISSION, STRAT, SETNO) %>% data.frame()
-  #####
   #NOTE - Noticed that the set counts/strata were incorrect for Mar.stratisfy
   # cases of size class were inflating the number of sets (ie each size class was counted a separate 
-  # set) This further impacted means, std errors, abiund and biomass 
-  tmp$BIOMASS_<-tmp$TOTWGT*tmp$TUNITS
-  tmp$ABUND_<-tmp$TOTNO*tmp$TUNITS
+  # set) This further impacted means, std errors, abund and biomass 
 
-  nw_strat <- tmp %>%
-    dplyr::group_by(MISSION, STRAT) %>%
+  nw_strat <- nw_set %>%
+    dplyr::group_by(MISSION, STRAT, TAXA_) %>%
     dplyr::summarise(N_SETS = length(STRAT),
                      TOT_WGT = round(sum(TOTWGT),5),
                      MEAN_WGT = round(mean(TOTWGT),5),
@@ -62,8 +60,11 @@ stratify_NW<-function(tblList = NULL, dfNWSets= NULL, ...){
                      .groups = "keep") %>% 
     arrange(MISSION, STRAT) %>%
     as.data.frame()
-  #####
+
+  res_nw$strat_inf <- strat_inf 
+  res_nw$nw_set <- nw_set[,c("MISSION", "STRAT", "TAXA_", "SETNO", "TOTNO", "TOTWGT")] %>% arrange(MISSION, SETNO) %>% data.frame()
   res_nw$nw_strat <- nw_strat 
-  ####
+  
+  if(args$debug) message(thisFun, ": completed (",round( difftime(Sys.time(),startTime,units = "secs"),0),"s)")
   return(res_nw)
 }

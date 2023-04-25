@@ -1,3 +1,22 @@
+where_now <- function (callstack = sys.calls()) 
+{
+  clean_where <- function(x) {
+    val <- sapply(x, function(xt) {
+      z <- strsplit(paste(xt, collapse = "\t"), "\t")[[1]]
+      switch(z[1], lapply = z[3], sapply = z[3], do.call = z[2], 
+             `function` = "FUN", source = "###", eval.with.vis = "###", 
+             z[1])
+    })
+    val[grepl("\\<function\\>", val)] <- "FUN"
+    val <- val[!grepl("(###|FUN)", val)]
+    val <- utils::head(val, -1)
+    paste(val, collapse = "|")
+  }
+  cs <- callstack
+  cs <- clean_where(cs)
+  return(cs)
+}
+
 st_err <- function (x = NULL) {
   stats::sd(x)/sqrt(length(x))
 }
@@ -8,33 +27,55 @@ combine_lists <- function(primary = NULL, ancilliary = NULL){
   return(kept)
 }
 
+
+sexifyNames <- function(df, desc=NULL){
+  colnames(df) <- gsub(pattern = "^0_", paste0("UNKN_",desc,"_"), colnames(df))
+  colnames(df) <- gsub(pattern = "^1_", paste0("MALE_",desc,"_"), colnames(df))
+  colnames(df) <- gsub(pattern = "^2_", paste0("FEMALE_",desc,"_"), colnames(df))
+  colnames(df) <- gsub(pattern = "^9_", paste0(desc,"_"), colnames(df))
+  return(df)
+}
+
+
+unSexifyNames <- function(df, desc=NULL){
+  colnames(df) <- gsub(pattern = paste0("^UNKN_",desc,"_"), paste0("0_"), colnames(df))
+  colnames(df) <- gsub(pattern = paste0("^MALE_",desc,"_"), paste0("1_"), colnames(df))
+  colnames(df) <- gsub(pattern = paste0("^FEMALE_",desc,"_"), paste0("2_"), colnames(df))
+  colnames(df) <- gsub(pattern = paste0("^",desc,"_"), paste0("9_"), colnames(df))
+  return(df)
+}
+
 set_defaults <- function(debug = FALSE, 
-                         quiet = TRUE, 
+                         quiet = TRUE,
+                         survey=NULL,
+                         years= NULL,
                          type1TowsOnly = TRUE,
                          keep_nullsets= TRUE, 
                          towDist = 1.75, 
+                         bySex=F, 
+                         ageBySex = F, 
+                         useBins = F,
                          code = NULL, 
                          aphiaid = NULL, 
                          taxa= NULL, 
                          taxaAgg = FALSE, ...){
+  
   defaults <- as.list(environment())
+  defaults[["tblList"]] <- NULL
   sentArgs <- list(...)
   #ensure hardcoded args take priority over user args
   submittedArgs <- combine_lists(primary = sentArgs$argsFn, ancilliary = sentArgs$argsUser)
   #ensure submitted args take priority over default args
   argg <- combine_lists(primary =  submittedArgs, ancilliary = defaults)
+  
+  # jakes <- setdiff(names(argg),names(defaults))
+  # if (length(jakes)>0){
+  #   warning(paste0("This package does not understand the following parameter(s): ",paste0(jakes,collapse = ",")))
+  # }
+  
   return(argg)
 }
 
-# setDefaultArgs <- function(args =NULL){
-#   if(is.null(args))args<- list()
-#   if (is.null(args$keep_nullsets))args$keep_nullsets <- TRUE
-#   if (is.null(args$debug))args$debug <- FALSE
-#   if (is.null(args$quiet))args$quiet <- FALSE
-#   if(!is.null(args$taxa)) args$taxa <- toupper(args$taxa)
-#   if (is.null(args$taxaAgg))args$taxaAgg <- FALSE
-#   return(args)
-# }
 binSizes <- function(bin, value){
   (floor(value/bin)*bin) + ((bin*.5)-0.5)  
 }

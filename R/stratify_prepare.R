@@ -7,23 +7,20 @@
 #' @returns ...
 #' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-stratify_prepare<-function(tblList = NULL,bySex=F, useBins = F, towDist = 1.75,...){
-  browser()
-  args <- list(...)
-  debug <- ifelse(is.null(args$debug), F, args$debug) 
-  quiet <- ifelse(is.null(args$quiet), F, args$quiet) 
-  if("GSCAT_agg" %in% names(tblList)){
-    dfRawCatch <- tblList$GSCAT_agg
-    t_field <- "TAXA_"
-  } else {
-    dfRawCatch <- tblList$GSCAT
-    t_field <- "SPEC"
+stratify_prepare<-function(tblList = NULL, ...){
+  argsFn <- as.list(environment())
+  argsFn[["tblList"]] <- NULL
+  argsUser <- list(...)
+  args <- do.call(set_defaults, list(argsFn=argsFn, argsUser=argsUser))
+  if(args$debug){
+    startTime <- Sys.time()
+    thisFun <- where_now()
+    message(thisFun, ": started")
   }
-  
   ##### correct FSEX and FLEN as requested #####
-  dataLFFixed <- tblList$dataLF[!is.na(tblList$dataLF$SPEC),]
-  dataDETSFixed <- tblList$dataDETS[!is.na(tblList$dataDETS$SPEC),]
-  if (!bySex){
+  dataLFFixed <- tblList$dataLF[!is.na(tblList$dataLF$TAXA_),]
+  dataDETSFixed <- tblList$dataDETS[!is.na(tblList$dataDETS$TAXA_),]
+  if (!args$bySex){
     #if not by sex, overwrite FSEX to 9 everywhere 
     dataLFFixed$FSEX   <- 9
     dataDETSFixed$FSEX <- 9
@@ -32,29 +29,35 @@ stratify_prepare<-function(tblList = NULL,bySex=F, useBins = F, towDist = 1.75,.
     dataLFFixed[which(dataLFFixed$FSEX==3),"FSEX"] <- 2
     dataDETSFixed[which(dataDETSFixed$FSEX==3),"FSEX"] <- 2
   }
-  
-  if (!useBins) {
+
+  if (!args$useBins) {
     #default FLEN binsize is 1, and overwritten if requested
     dataLFFixed$LGRP <- 1
     dataDETSFixed$LGRP <- 1
   }else{ 
-    specLrp <- tblList$GSSPECIES[tblList$GSSPECIES$CODE %in% c(unique(dfRawCatch$SPEC)),c("CODE","LGRP")]
-    dataLFFixed <- merge(dataLFFixed, specLrp, all.x =T, by.x= t_field, by.y = "CODE")
-    dataDETSFixed <- merge(dataDETSFixed, specLrp, all.x =T, by.x= t_field, by.y = "CODE")
+    specLrp <- tblList$GSSPECIES[tblList$GSSPECIES$TAXA_ %in% c(unique(tblList$GSCAT$TAXA_)),c("TAXA_","LGRP")]
+    dataLFFixed <- merge(dataLFFixed, specLrp, all.x =T, by.x= "TAXA_", by.y = "TAXA_")
+    dataDETSFixed <- merge(dataDETSFixed, specLrp, all.x =T, by.x= "TAXA_", by.y = "TAXA_")
     dataLFFixed[is.na(dataLFFixed$LGRP),"LGRP"] <- 1
     dataDETSFixed[is.na(dataDETSFixed$LGRP),"LGRP"] <- 1
     dataLFFixed$FLEN <- binSizes(dataLFFixed$LGRP, dataLFFixed$FLEN)
     dataDETSFixed$FLEN <- binSizes(dataDETSFixed$LGRP, dataDETSFixed$FLEN)
   }
+  tblList$GSINF[which(is.na(tblList$GSINF$DIST)|(tblList$GSINF$DIST==0)),"DIST"] <-args$towDist
+  #all the stratify stuff will want strat info available
+  dataDETSFixed <- merge(dataDETSFixed, tblList$GSINF[,c("STRAT", "SETNO")], all.x = T)
+  dataLFFixed <- merge(dataLFFixed, tblList$GSINF[,c("STRAT", "SETNO")], all.x = T)
   
-  tblList$GSINF[which(is.na(tblList$GSINF$DIST)|(tblList$GSINF$DIST==0)),"DIST"] <-towDist
+  # since we may have rewritten FSEX and/or FLEN values, we should agg dataLF, or we'll have 
+  # duplicate rows; no need to do dataDETS, since each record has an identifier
   
-  tblList$GSCAT_agg <- NULL
-  tblList$GSCAT <- NULL
-  tblList$GSCAT <- dfRawCatch
-  tblList$dataLF <- NULL
-  tblList$dataLF <- dataLFFixed
-  tblList$dataDETS <- NULL
+  tblList$dataLF <- dataLFFixed %>%
+    dplyr::group_by(dplyr::across(c(-CLEN))) %>%
+    dplyr::summarise(CLEN=sum(CLEN),
+                     .groups = "keep")%>% 
+    as.data.frame()
+  
   tblList$dataDETS <- dataDETSFixed
+  if(args$debug) message(thisFun, ": completed (",round( difftime(Sys.time(),startTime,units = "secs"),0),"s)")
  return(tblList)
 }
