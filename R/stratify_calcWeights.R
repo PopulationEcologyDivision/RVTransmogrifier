@@ -1,15 +1,13 @@
-#' @title stratify_calcLengths
+#' @title stratify_calcWeights
 #' @description This function ...
 #' @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes. Prior 
 #' to running this function they should all have been filtered via \code{propagateChanges()}
 #' @param dfNWSets this is the output from \code{NW_sets()}.
-#' @param towDist the default is \code{1.75}. This is ...
-#' @param bySex the default is \code{F}. This is ...
 #' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
 #' @returns ...
 #' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
 #' @export
-stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, ...){
+stratify_calcWeights<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, ...){
   argsFn <- as.list(environment())
   argsFn[["tblList"]] <- NULL
   argsUser <- list(...)
@@ -19,8 +17,6 @@ stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL
     thisFun <- where_now()
     message(thisFun, ": started")
   }
-  
-  if (args$bySex & length(unique(tblList$dataDETS$FSEX))==1) args$bySex <- FALSE
   
   theseMissions <- unique(tblList$GSMISSIONS$MISSION)
   thisTAXA <- unique(dfNWSets$TAXA_)

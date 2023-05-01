@@ -25,12 +25,11 @@ stratify_NW<-function(tblList = NULL, dfNWSets= NULL, stratInfo = NULL, ...){
   nw_set$BIOMASS_<-nw_set$TOTWGT*nw_set$TUNITS
   nw_set$ABUND_<-nw_set$TOTNO*nw_set$TUNITS
   
-   
-  strat_inf <- nw_set %>% 
-    select(TOTWGT,STRAT, NAME, SQNM) %>%  #DMIN, DMAX, , DEPTH, TUNITS 
+  nw_strat_inf <- nw_set %>% 
+    select(TOTWGT,STRAT, SQNM) %>%  #DMIN, DMAX, , DEPTH, TUNITS 
     mutate(SOMECATCH = ifelse(TOTWGT>0, 1, 0),
            AREA_CALC= SQNM* SOMECATCH) %>% 
-    dplyr::group_by(STRAT,  NAME) %>%
+    dplyr::group_by(STRAT) %>%
     dplyr::summarise(AREAPROP = round(mean(SOMECATCH),3), 
                      AREACNT  = length(SOMECATCH),
                      AREAPROPSTERR = round(st_err(SOMECATCH),5),
@@ -45,7 +44,7 @@ stratify_NW<-function(tblList = NULL, dfNWSets= NULL, stratInfo = NULL, ...){
   # set) This further impacted means, std errors, abund and biomass 
 
   nw_strat <- nw_set %>%
-    dplyr::group_by(MISSION, STRAT, TAXA_) %>%
+    dplyr::group_by(MISSION, STRAT) %>%
     dplyr::summarise(N_SETS = length(STRAT),
                      TOT_WGT = round(sum(TOTWGT),5),
                      MEAN_WGT = round(mean(TOTWGT),5),
@@ -61,8 +60,10 @@ stratify_NW<-function(tblList = NULL, dfNWSets= NULL, stratInfo = NULL, ...){
     arrange(MISSION, STRAT) %>%
     as.data.frame()
 
-  res_nw$strat_inf <- strat_inf 
-  res_nw$nw_set <- nw_set[,c("MISSION", "STRAT", "TAXA_", "SETNO", "TOTNO", "TOTWGT")] %>% arrange(MISSION, SETNO) %>% data.frame()
+  res_nw$nw_strat_inf <- nw_strat_inf 
+  res_nw$nw_set <- nw_set[,c("MISSION", "STRAT", "SETNO", "TOTNO", "TOTWGT")] %>% 
+    arrange(MISSION, SETNO) %>% 
+    data.frame()
   res_nw$nw_strat <- nw_strat 
   
   if(args$debug) message(thisFun, ": completed (",round( difftime(Sys.time(),startTime,units = "secs"),0),"s)")
