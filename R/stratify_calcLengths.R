@@ -20,10 +20,11 @@ stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL
     message(thisFun, ": started")
   }
   
-  if (args$bySex & length(unique(tblList$dataDETS$FSEX))==1) args$bySex <- FALSE
-  
   theseMissions <- unique(tblList$GSMISSIONS$MISSION)
   thisTAXA <- unique(dfNWSets$TAXA_)
+  # if (args$bySex & length(unique(tblList$dataDETS$FSEX))==1) args$bySex <- FALSE
+
+  # args$bySex
   dfLen <- tblList$dataLF %>%
     filter(TAXA_ == thisTAXA & !is.na(FLEN)) %>%
     group_by(MISSION, STRAT, SETNO, TAXA_, FSEX, FLEN, LGRP) %>%
@@ -46,6 +47,10 @@ stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL
 
   dfLen<- rbind.data.frame(dfLen, emptydf_len)
 
+  if (!args$bySex) {
+    dfLen$FSEX <- 9
+  }
+
   length_by_set <- dfLen %>%
     group_by(MISSION, STRAT, SETNO, FLEN, FSEX) %>%
     summarise(CLEN = sum(CLEN), .groups = 'keep') %>%
@@ -55,8 +60,11 @@ stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL
     arrange(MISSION, SETNO) %>%
     sexifyNames(desc="LEN") %>%
     select(MISSION, STRAT, SETNO, sort(names(.))) %>%
+    select(-one_of('TOTAL'), one_of('TOTAL')) %>%
     as.data.frame()
-
+  
+  if(args$debug)message("Need to add average lengths/age/sex to age_table")
+  
 length_by_strat_mean <- length_by_set %>%
   select(-SETNO,-TOTAL) %>% 
   group_by(MISSION, STRAT) %>%
@@ -72,39 +80,56 @@ length_by_strat_se <- length_by_set %>%
   select(-SETNO,-TOTAL) %>% 
   group_by(MISSION, STRAT) %>%
   summarise(across(everything(), st_err), .groups = 'keep')%>%
+  ungroup() %>%
+  mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT")], na.rm = T)) %>% 
   arrange(MISSION, STRAT) %>%
-  sexifyNames(desc="LEN") %>%
   select(MISSION, STRAT, sort(names(.))) %>%
+  select(-one_of('TOTAL'), one_of('TOTAL')) %>%
   as.data.frame()
   
   length_by_strat_total <- length_by_strat_mean %>% 
+    select(-TOTAL) %>% 
     left_join(., stratInfo[, c("STRAT", "TUNITS")], by="STRAT") %>% 
     ungroup() %>% 
     mutate(across(-c("MISSION","STRAT", "TUNITS"), ~ . * TUNITS)) %>% 
     ungroup() %>%  
     select(-TUNITS)  %>% 
+    mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT")], na.rm = T)) %>% 
     sexifyNames(desc="LEN") %>%
     select(MISSION, STRAT, sort(names(.))) %>% 
+    select(-one_of('TOTAL'), one_of('TOTAL')) %>%
     as.data.frame()
-
-  length_by_strat_total_tots <- colSums(length_by_strat_total[,!names(length_by_strat_total) %in% c("MISSION", "STRAT"),F])
-  length_by_strat_total_tots<- c("TOTAL", "TOTAL", length_by_strat_total_tots)
+  
+  length_by_strat_total_tots <- colSums(length_by_strat_total[,!names(length_by_strat_total) %in% c("MISSION", "STRAT")])
+  length_by_strat_total_tots<- c("TOTAL", NA, length_by_strat_total_tots)
   length_by_strat_total<- rbind.data.frame(length_by_strat_total,length_by_strat_total_tots)
+  
   length_by_strat_total_se <- length_by_strat_se %>% 
+    select(-TOTAL) %>% 
     left_join(., stratInfo[, c("STRAT", "TUNITS")], by="STRAT") %>% 
     ungroup() %>% 
     mutate(across(-c("MISSION","STRAT", "TUNITS"), ~ . * TUNITS)) %>% 
     select(-TUNITS)  %>% 
+    # mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT")], na.rm = T)) %>% 
     sexifyNames(desc="LEN") %>%
     select(MISSION, STRAT, sort(names(.))) %>% 
+    # select(-one_of('TOTAL'), one_of('TOTAL')) %>%
     as.data.frame()
+
+  if (args$debug) message("The 'Total' column for length_by_strat_total_sefor is not just the sum of the row values\n
+                          need to figure it out.")
+  length_by_strat_total_se_tots <- colSums(length_by_strat_total_se[,!names(length_by_strat_total_se) %in% c("MISSION", "STRAT")])
+  length_by_strat_total_se_tots<- c("TOTAL", NA, length_by_strat_total_se_tots)
+  length_by_strat_total_se<- rbind.data.frame(length_by_strat_total_se,length_by_strat_total_se_tots)
+  
   results=list(length_by_set= length_by_set,
                length_by_strat_mean = length_by_strat_mean,
                length_by_strat_se = length_by_strat_se,
                length_by_strat_total = length_by_strat_total,
-               length_by_strat_total_se = length_by_strat_total_se,
-               dfLen = dfLen)
-  
+               length_by_strat_total_se = length_by_strat_total_se)
+  if(args$debug){
+    results[["debugdfLen"]]<-dfLen
+  }
   if(args$debug) message(thisFun, ": completed (",round( difftime(Sys.time(),startTime,units = "secs"),0),"s)")
   return(results)
 }

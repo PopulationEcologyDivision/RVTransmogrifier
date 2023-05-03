@@ -17,19 +17,21 @@ stratify_prepare<-function(tblList = NULL, ...){
     thisFun <- where_now()
     message(thisFun, ": started")
   }
-  ##### correct FSEX and FLEN as requested #####
+  ##### correct FSEX  #####
   dataLFFixed <- tblList$dataLF[!is.na(tblList$dataLF$TAXA_),]
   dataDETSFixed <- tblList$dataDETS[!is.na(tblList$dataDETS$TAXA_),]
-  if (!args$bySex){
-    #if not by sex, overwrite FSEX to 9 everywhere 
-    dataLFFixed$FSEX   <- 9
-    dataDETSFixed$FSEX <- 9
-  }else{
+  #stuff below wrecks age data - age data FLENs must be linked using original FSEX to match STRANAL
+  # if (!args$bySex){
+  #   #if not by sex, overwrite FSEX to 9 everywhere 
+  #   dataLFFixed$FSEX   <- 9
+  #   dataDETSFixed$FSEX <- 9
+  # }else{
     #if present, berried females (3) are re-categorized as 2
     dataLFFixed[which(dataLFFixed$FSEX==3),"FSEX"] <- 2
     dataDETSFixed[which(dataDETSFixed$FSEX==3),"FSEX"] <- 2
-  }
+  # }
 
+  ##### correct FLEN #####
   if (!args$useBins) {
     #default FLEN binsize is 1, and overwritten if requested
     dataLFFixed$LGRP <- 1

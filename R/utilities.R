@@ -53,7 +53,6 @@ set_defaults <- function(debug = FALSE,
                          keep_nullsets= TRUE, 
                          towDist = 1.75, 
                          bySex=F, 
-                         ageBySex = F, 
                          useBins = F,
                          code = NULL, 
                          aphiaid = NULL, 
@@ -67,10 +66,10 @@ set_defaults <- function(debug = FALSE,
   submittedArgs <- combine_lists(primary = sentArgs$argsFn, ancilliary = sentArgs$argsUser)
   #ensure submitted args take priority over default args
   argg <- combine_lists(primary =  submittedArgs, ancilliary = defaults)
-  
-  # jakes <- setdiff(names(argg),names(defaults))
+  # browser()
+  # jakes <- setdiff(names(sentArgs),names(defaults))
   # if (length(jakes)>0){
-  #   warning(paste0("This package does not understand the following parameter(s): ",paste0(jakes,collapse = ",")))
+  #    warning(paste0("This package does not understand the following parameter(s): ",paste0(jakes,collapse = ",")))
   # }
   
   return(argg)

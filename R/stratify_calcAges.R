@@ -12,7 +12,7 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, s
   theseMissions <- unique(tblList$GSMISSIONS$MISSION)
   thisTAXA <- unique(dfNWSets$TAXA_)
   thisLGRP <- unique(na.omit(dfNWSets$LGRP))
-  
+
   stratTots <- stratLengths %>% filter(.,MISSION == "TOTAL") %>%
     select(-c(MISSION, STRAT, TOTAL)) %>%
     unSexifyNames(., desc = "LEN") %>%
@@ -29,6 +29,7 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, s
     group_by(MISSION,  FSEX, FLEN, AGE) %>%
     summarise(CAGE = length(MISSION), .groups = 'keep') %>%
     as.data.frame()
+  
   #make an initial df of all combos of mission, ages, lengths and sexes
   
   alk_lengths <- seq(min(alk_pre$FLEN, na.rm = T),max(alk_pre$FLEN, na.rm = T), by=thisLGRP)
@@ -58,13 +59,19 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, s
   
   alw <- alw_pre %>%
     tidyr::pivot_wider(names_from = c(AGE), values_from = FWT, values_fill = 0)%>%
-    sexifyNames(desc = "AGE") %>% 
+    mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "FSEX", "FLEN")], na.rm = T)) %>% 
     as.data.frame() %>% 
     arrange(MISSION, FSEX, FLEN) 
+
   
+  if(args$debug)message("Need to add average weights/age/sex to age_length_weight table")
+  
+  #add totals to age table
   alk <- alk_pre %>%
-    sexifyNames(desc = "AGE") %>% 
+    mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "FSEX", "FLEN")], na.rm = T)) %>% 
     as.data.frame()
+  alk_tots <- c("TOTAL",NA,NA,colSums(alk[,!names(alk) %in% c("MISSION", "FSEX", "FLEN")]))
+  alk<-rbind(alk,alk_tots)
   
   for (s in 1:length(alk_sexes)){
     thisSexProp <- alk_pre[alk_pre$FSEX %in% alk_sexes[s] ,]
@@ -85,78 +92,84 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, s
       as.data.frame()
     if(s==1) {
       ageTable <- thisSexAlk
+      sexProp <- thisSexProp
     }else{
       ageTable <- rbind.data.frame(ageTable, thisSexAlk)
+      sexProp <- rbind.data.frame(sexProp,thisSexProp)
     }
   }
+  if(args$debug)message("Need to add average lengths/age/sex to age_table")
+  sexProp[!names(sexProp) %in% c("MISSION", "FSEX","FLEN")] <- sexProp[!names(sexProp) %in% c("MISSION","FSEX","FLEN")]/rowSums(sexProp[!names(sexProp) %in% c("MISSION","FSEX","FLEN")])
+  sexProp[is.na(sexProp)] = 0
   
-  thisNoSexProp <- alk_pre %>% 
-    select(-FSEX) %>% 
-    group_by(MISSION, FLEN) %>%
-    summarise(across(everything(), mean), .groups = 'keep') %>% 
-    as.data.frame()
-  thisNoSexProp[!names(thisNoSexProp) %in% c("MISSION", "FLEN")] <- thisNoSexProp[!names(thisNoSexProp) %in% c("MISSION","FLEN")]/rowSums(thisNoSexProp[!names(thisNoSexProp) %in% c("MISSION","FLEN")])
-  thisNoSexProp[is.na(thisNoSexProp)] = 0
-  
-  dfAge <- tblList$dataLF %>%
-    filter(TAXA_ == thisTAXA & !is.na(FLEN)) %>%
-    group_by(MISSION, STRAT, SETNO, TAXA_, FLEN, LGRP) %>%
+  dfAge <- tblList$dataLF %>%  
+    filter(TAXA_ == thisTAXA & !is.na(FLEN) & !is.na(CLEN)) %>%
+    select(-TAXA_) %>% 
+    group_by(MISSION, STRAT, SETNO, FSEX, FLEN, LGRP) %>%
     summarise(CAGE = sum(CLEN), 
               .groups = 'keep') %>%
     as.data.frame()
-  
+
   allLengths <- seq(min(dfAge$FLEN, na.rm = T),max(dfAge$FLEN, na.rm = T), by= thisLGRP)
+  allSexes <- sort(unique(dfAge$FSEX))
   
   #create fake dfs for all values of length and age
   emptydf_age <- tblList$GSINF[,c("MISSION", "SETNO", "STRAT")]
   emptydf_age <- expandDF(templateDF = emptydf_age, keyFields = c("STRAT","MISSION","SETNO"), expandField = "FLEN", expandVals = allLengths)
+  emptydf_age <- expandDF(templateDF = emptydf_age, keyFields = c("STRAT","MISSION","SETNO","FLEN"), expandField = "FSEX", expandVals = allSexes)
   emptydf_age$CAGE <- 0
-  emptydf_age<- anti_join(emptydf_age, dfAge, by = c("MISSION", "STRAT", "SETNO", "FLEN")) 
-  dfAge<- rbind.data.frame(dfAge[,c("MISSION", "STRAT", "SETNO", "FLEN", "CAGE")], emptydf_age)
-  
-  # age_by_set <- dfAge %>%
-  #   group_by(MISSION, STRAT, SETNO, FLEN) %>%
-  #   summarise(CAGE = sum(CAGE), .groups = 'keep') %>%
-  #   tidyr::pivot_wider(names_from = c(FLEN), values_from = CAGE, values_fill = 0)%>%
-  #   ungroup() %>%
-  #   mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT", "SETNO")], na.rm = T)) %>%
-  #   arrange(MISSION, SETNO) %>%
-  #   sexifyNames(desc="AGE") %>%
-  #   select(MISSION, STRAT, SETNO, sort(names(.))) %>%
-  #   as.data.frame()
-  
-  ages_pre <- filter(tblList$dataDETS, !is.na(AGE) & TAXA_ == thisTAXA) 
-  if (ages_pre %>% nrow()==0){return(NA)}
-    
+  emptydf_age<- anti_join(emptydf_age, dfAge, by = c("MISSION", "STRAT", "SETNO", "FLEN","FSEX")) 
+  dfAge<- rbind.data.frame(dfAge[,c("MISSION", "STRAT", "SETNO", "FSEX","FLEN", "CAGE")], emptydf_age)
+
   age_by_set<- dfAge %>% 
-    left_join(thisNoSexProp, c("MISSION","FLEN")) %>% 
-    mutate(across(-c("MISSION","FLEN","STRAT", "SETNO", "CAGE"), ~ . * CAGE)) %>% 
-    select(-FLEN, -CAGE) %>% 
+    left_join(sexProp, c("MISSION","FSEX","FLEN")) %>% 
+    mutate(across(-c("MISSION","FSEX","FLEN","STRAT", "SETNO", "CAGE"), ~ . * CAGE)) %>% 
+    select(-FLEN, -CAGE,-FSEX) %>% 
     group_by(MISSION, STRAT, SETNO) %>% 
     summarise(across(everything(), sum, na.rm = TRUE),.groups ="keep") %>% 
-    as.data.frame()
+    ungroup() %>% 
+    mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT","SETNO")], na.rm = T)) %>% 
+    select(MISSION, STRAT, SETNO, sort(names(.))) %>% 
+    select(-one_of('TOTAL'), one_of('TOTAL')) %>%
+    as.data.frame() 
 
   age_by_strat_mean <- age_by_set %>% 
-    select(-SETNO) %>% 
+    select(-SETNO,-TOTAL) %>% 
     group_by(MISSION, STRAT)  %>% 
-    summarise(across(everything(), mean, na.rm = TRUE),.groups ="keep")  %>% 
-    as.data.frame()
+    summarise(across(everything(), mean, na.rm = TRUE),.groups ="keep")   %>% 
+    ungroup() %>% 
+    mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT")], na.rm = T)) %>% 
+    select(MISSION, STRAT, sort(names(.))) %>% 
+    select(-one_of('TOTAL'), one_of('TOTAL')) %>%
+    as.data.frame() 
+  if (args$debug)message("The bottom row total of age_by_strat_mean is not the sum of the columns - need to figure out what it is")
   
   age_by_strat_se <- age_by_set %>% 
     select(-SETNO) %>% 
     group_by(MISSION, STRAT)  %>% 
     summarise(across(everything(), st_err),.groups ="keep")  %>% 
+    ungroup() %>% 
+    # mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT")], na.rm = T)) %>% 
+    select(MISSION, STRAT, sort(names(.))) %>%
+    select(-one_of('TOTAL'), one_of('TOTAL')) %>%
     as.data.frame()
-  
+
   age_by_strat_total <- age_by_strat_mean %>% 
+    select(-TOTAL) %>% 
     left_join(., stratInfo[, c("STRAT", "TUNITS")], by="STRAT") %>% 
     ungroup() %>% 
     mutate(across(-c("MISSION","STRAT", "TUNITS"), ~ . * TUNITS)) %>% 
     ungroup() %>%  
     select(-TUNITS)  %>% 
-    select(MISSION, STRAT, sort(names(.))) %>% 
+    mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "STRAT")], na.rm = T)) %>% 
+    select(MISSION, STRAT, sort(names(.))) %>%
+    select(-one_of('TOTAL'), one_of('TOTAL')) %>%
     as.data.frame()
-
+    
+  age_by_strat_total_tots <- colSums(age_by_strat_total[,!names(age_by_strat_total) %in% c("MISSION", "STRAT")])
+  age_by_strat_total_tots<- c("TOTAL", NA, age_by_strat_total_tots)
+  age_by_strat_total<- rbind.data.frame(age_by_strat_total,age_by_strat_total_tots)
+  
   age_by_strat_total_se <- age_by_strat_se %>%
     left_join(., stratInfo[, c("STRAT", "TUNITS")], by="STRAT") %>%
     ungroup() %>%
@@ -164,7 +177,9 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, s
     select(-TUNITS)  %>%
     select(MISSION, STRAT, sort(names(.))) %>%
     as.data.frame()
-
+  if (args$debug)message("The bottom row total of age_by_strat_total_se is not the sum of the columns - need to figure out what it is")
+  
+  
   results<- list(age_length_key= alk,
                  age_length_weight = alw,
                  age_table = ageTable,
@@ -174,5 +189,9 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratInfo = NULL, s
                  age_by_strat_total = age_by_strat_total,
                  age_by_strat_total_se = age_by_strat_total_se
   )
+  if(args$debug){
+    results[["debugdfAge"]]<-dfAge
+    results[["sexProp"]]<-sexProp
+  }
   return(results)
 }
