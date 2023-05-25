@@ -235,3 +235,7 @@ ggStrataData <- function(catchStrataData = NULL, plotField = NULL, filter=NULL){
   ggItems[["ggStratData"]] <- c(ggItems[["ggStratData"]],ggplot2::scale_fill_continuous(name = paste0(plotField, "\n(",plotLabel,")"), direction = -1,type = "viridis",na.value = NA))
   return(ggItems)
 }
+
+#is.nan didn't have a method for data.frames
+is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))

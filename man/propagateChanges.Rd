@@ -4,18 +4,18 @@
 \alias{propagateChanges}
 \title{propagateChanges}
 \usage{
-propagateChanges(tblList = NULL, keep_nullsets = NULL, args = NULL)
+propagateChanges(tblList = NULL, ...)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that
 should have filtering applied to them.}
 
+\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
+
 \item{keep_nullsets}{the default is \code{FALSE}. This is used to control whether or not the 
 presence/absence of species changes the returned set locations. If \code{FALSE}, the only 
 returned records will be directly linkable to the user-filtered records. If \code{TRUE}, set 
 locations will still be returned, even if a particular species was not caught there.}
-
-\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 }
 \value{
 a list of filtered versions of the dataframes passed as \code{tblList}. If the

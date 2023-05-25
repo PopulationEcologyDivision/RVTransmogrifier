@@ -17,23 +17,16 @@ stratify_prepare<-function(tblList = NULL, ...){
     thisFun <- where_now()
     message(thisFun, ": started")
   }
-  ##### correct FSEX  #####
+  
   dataLFFixed <- tblList$dataLF[!is.na(tblList$dataLF$TAXA_),]
   dataDETSFixed <- tblList$dataDETS[!is.na(tblList$dataDETS$TAXA_),]
-  #stuff below wrecks age data - age data FLENs must be linked using original FSEX to match STRANAL
-  # if (!args$bySex){
-  #   #if not by sex, overwrite FSEX to 9 everywhere 
-  #   dataLFFixed$FSEX   <- 9
-  #   dataDETSFixed$FSEX <- 9
-  # }else{
-    #if present, berried females (3) are re-categorized as 2
-    dataLFFixed[which(dataLFFixed$FSEX==3),"FSEX"] <- 2
-    dataDETSFixed[which(dataDETSFixed$FSEX==3),"FSEX"] <- 2
-  # }
-
+  
+  #if present, berried females (3) are re-categorized as 2
+  dataLFFixed[which(dataLFFixed$FSEX==3),"FSEX"] <- 2
+  dataDETSFixed[which(dataDETSFixed$FSEX==3),"FSEX"] <- 2
+  
   ##### correct FLEN #####
   if (!args$useBins) {
-    #default FLEN binsize is 1, and overwritten if requested
     dataLFFixed$LGRP <- 1
     dataDETSFixed$LGRP <- 1
   }else{ 
@@ -45,14 +38,15 @@ stratify_prepare<-function(tblList = NULL, ...){
     dataLFFixed$FLEN <- binSizes(dataLFFixed$LGRP, dataLFFixed$FLEN)
     dataDETSFixed$FLEN <- binSizes(dataDETSFixed$LGRP, dataDETSFixed$FLEN)
   }
+  
   tblList$GSINF[which(is.na(tblList$GSINF$DIST)|(tblList$GSINF$DIST==0)),"DIST"] <-args$towDist
-  #all the stratify stuff will want strat info available
   dataDETSFixed <- merge(dataDETSFixed, tblList$GSINF[,c("STRAT", "SETNO")], all.x = T)
-  dataLFFixed <- merge(dataLFFixed, tblList$GSINF[,c("STRAT", "SETNO")], all.x = T)
+  dataLFFixed   <- merge(dataLFFixed, tblList$GSINF[,c("STRAT", "SETNO")], all.x = T)
   
-  # since we may have rewritten FSEX and/or FLEN values, we should agg dataLF, or we'll have 
+  tblList$GSSTRATUM <- addTUNITS(tblList$GSSTRATUM)
+  
+  # since we may have rewritten FLEN values, we should agg dataLF, or we'll have 
   # duplicate rows; no need to do dataDETS, since each record has an identifier
-  
   tblList$dataLF <- dataLFFixed %>%
     dplyr::group_by(dplyr::across(c(-CLEN))) %>%
     dplyr::summarise(CLEN=sum(CLEN),
@@ -61,5 +55,5 @@ stratify_prepare<-function(tblList = NULL, ...){
   
   tblList$dataDETS <- dataDETSFixed
   if(args$debug) message(thisFun, ": completed (",round( difftime(Sys.time(),startTime,units = "secs"),0),"s)")
- return(tblList)
+  return(tblList)
 }

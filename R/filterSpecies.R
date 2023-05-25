@@ -30,20 +30,9 @@ filterSpecies <- function(tblList = NULL, ...){
     message(thisFun, ": started")
   }
   #if nothing is to be filtered, skip.
-  if (all(is.null(args$code), is.null(args$aphiaid), is.null(args$taxa))) return(tblList)
-  
-  if(args$debug)message("\tfiltering by species - populating TAXA_ and TAXARANK_ to GSSPECIES to facilitate aggregation")
-  if (!is.null(args$code))    {
-    if (!is.null(args$aphiaid) | !is.null(args$taxa)){
-      message("Only one filter type (i.e. code, taxa, aphiaid) can be done at once. 'code' will be used.")
-    }
-    req_Spp <- tblList$GSSPECIES[which(tblList$GSSPECIES$CODE %in% args$code),]
-    req_Spp[,"TAXA_"]<- req_Spp[, "SCI_NAME"]
-    req_Spp[,"TAXARANK_"]<- req_Spp[, "RANK"]
-    if (length(args$code[!(args$code %in% tblList$GSSPECIES$CODE)])>0){
-      message("No species with the following codes could be found: ",paste0(args$code[!(args$code %in% tblList$GSSPECIES$CODE)], collapse = ", "))
-    }
-  } else if (!is.null(args$aphiaid)) {
+  # if (all(is.null(args$code), is.null(args$aphiaid), is.null(args$taxa))) return(tblList)
+ 
+  if (!is.null(args$aphiaid)) {
     if (!is.null(args$taxa)){
       message("Only one filter type  (i.e. code, taxa, aphiaid) can be done at once. Only 'aphiaid' will be used.")
     }
@@ -86,22 +75,35 @@ filterSpecies <- function(tblList = NULL, ...){
       req_Spp_Taxa <- rbind.data.frame(req_Spp_Taxa, these)
     }
     req_Spp<-req_Spp_Taxa
+  }else if (!is.null(args$code)){
+    req_Spp <- tblList$GSSPECIES[which(tblList$GSSPECIES$CODE %in% args$code),]
+    req_Spp[,"TAXA_"]<- req_Spp[, "SCI_NAME"]
+    req_Spp[,"TAXARANK_"]<- req_Spp[, "RANK"]
+    if (length(args$code[!(args$code %in% tblList$GSSPECIES$CODE)])>0){
+      message("No species with the following codes could be found: ",paste0(args$code[!(args$code %in% tblList$GSSPECIES$CODE)], collapse = ", "))
+    }
+  }else{
+    #if no code/aphia/taxa sent, still need to add taxa and taxarank to the data for other functions
+    req_Spp <- tblList$GSSPECIES
+    req_Spp[,"TAXA_"]<- req_Spp[, "SCI_NAME"]
+    req_Spp[,"TAXARANK_"]<- req_Spp[, "RANK"]
   }
   if (nrow(req_Spp) > 0 & nrow(req_Spp) < nrow(tblList$GSSPECIES)){
     tblList$GSSPECIES <- req_Spp
-    if(args$debug)message("\tlimited species table, about to filter again")
-    tblList <- propagateChanges(tblList, ...)
+    if(args$debug)message("\tlimited species table")
+    # tblList <- propagateChanges(tblList, ...)
   } else if (nrow(req_Spp)==0){
     message("Species filter resulted in zero species remaining - cancelling")
     return(-1)
-  }else if (nrow(req_Spp) == nrow(tblList$GSSPECIES)){
-    message("Species filter would not remove any species - cancelling")
-    return(tblList)
-  }
+  } else if (nrow(req_Spp) == nrow(tblList$GSSPECIES)){
+  #   message("Species filter would not remove any species - cancelling")
+    tblList$GSSPECIES <- req_Spp
+     return(tblList)
+   }
   if (!is.null(args$taxa) && nrow(req_Spp_Taxa)>0){
     if(args$taxaAgg) tblList <- aggregateByTaxa(tblList=tblList, ...)
   }
-  tblList <- propagateChanges(tblList, ...)
+  # tblList <- propagateChanges(tblList, ...)
   if (inherits(tblList,"numeric")){
     stop("Filter resulted in 0 records.")
   }

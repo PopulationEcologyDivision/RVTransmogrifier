@@ -34,6 +34,7 @@ propagateChanges<-function(tblList = NULL, ...){
   recdTables <- names(tblList)
   essentialTables <- c("GSINF","GSCAT","GSMISSIONS","GSXTYPE","GSCURNT","GSFORCE","GSHOWOBT","GSSTRATUM","GSGEAR","GSSEX","GSSPECIES","GSWARPOUT","GSAUX","GSMATURITY","dataDETS","dataLF")
   if (length(setdiff(essentialTables,recdTables))>0) stop("Missing the following tables from your tblList object: ",paste(setdiff(essentialTables,recdTables), collapse=", "))
+  tblList      <- filterSpecies(tblList = tblList, ...)
   LOOPAGAIN <- T
   if (all(c("TAXA_", "TAXARANK_") %in% names(tblList$GSSPECIES) & !all(c("TAXA_", "TAXARANK_") %in% names(tblList$GSCAT)))){
     if(args$debug) message("\tdetected TAXA_ and TAXARANK_ fields in GSSPECIES - adding to all tables")
@@ -92,7 +93,6 @@ propagateChanges<-function(tblList = NULL, ...){
     tblList$GSMATURITY <- merge(tblList$GSMATURITY, unique(tblList$dataDETS[,"FMAT",drop=F]), by.x="CODE", by.y="FMAT")
     tblList$GSSEX      <- merge(tblList$GSSEX,      unique(tblList$dataDETS[,"FSEX",drop=F]), by.x="CODE", by.y="FSEX")
     tblList$GSHOWOBT   <- tblList$GSHOWOBT[which(tblList$GSHOWOBT$HOWOBT %in% c(unique(tblList$GSINF$HOWD),unique(tblList$GSINF$HOWS))) ,]
-    
     # if(!args$taxaAgg){
     if(!all(c("TAXA_", "TAXARANK_") %in% names(tblList$GSCAT))){
       #this will only be used when no species filtering has been done.  As soon as species filtering 
@@ -121,7 +121,7 @@ propagateChanges<-function(tblList = NULL, ...){
     if(postcnt==precnt) {
       LOOPAGAIN=FALSE
     } else{
-      # if (args$debug) print(sapply(tblList, NROW))
+      if (args$debug) print(sapply(tblList, NROW))
     }
   }
   

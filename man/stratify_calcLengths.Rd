@@ -4,13 +4,7 @@
 \alias{stratify_calcLengths}
 \title{stratify_calcLengths}
 \usage{
-stratify_calcLengths(
-  tblList = NULL,
-  dfNWSets = NULL,
-  towDist = 1.75,
-  bySex = F,
-  ignoreLgrp = T
-)
+stratify_calcLengths(tblList = NULL, dfNWSets = NULL, ...)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes. Prior 
@@ -18,11 +12,9 @@ to running this function they should all have been filtered via \code{propagateC
 
 \item{dfNWSets}{this is the output from \code{NW_sets()}.}
 
-\item{towDist}{the default is \code{1.75}. This is ...}
+\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 
 \item{bySex}{the default is \code{F}. This is ...}
-
-\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 }
 \value{
 ...

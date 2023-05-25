@@ -4,22 +4,31 @@
 \alias{getSurvey}
 \title{getSurvey}
 \usage{
-getSurvey(survey = NULL, years = NULL, type1TowsOnly = TRUE, args = NULL, ...)
+getSurvey(survey = NULL, years = NULL, ...)
 }
 \arguments{
 \item{survey}{the default is \code{NULL}. This specifies which survey should be extracted.  Valid
-values are "SPRING", "SUMMER", "FALL", and "4VSW".}
+values are:
+\itemize{
+\item \code{4X} - Type 1; Spring (i.e. months 1:4); 2008+; specific strata 
+\item \code{GEORGES} - Type 1; Spring (i.e. months 1:4); strata 5Z*
+\item \code{SPRING} - Type 1; Spring (i.e. months 1:4); pre-2008; specific strata 
+\item \code{4VSW}  - Type 1; Spring (i.e. months 1:4); 4VSW strata;  
+\item \code{SUMMER} - Type 1; Summer (i.e. months 5:8); strata 440:495 - the "standard" strata
+\item \code{SUMMER_ALL} - Type 1; Summer (i.e. months 5:8); strata 434:559+5Z*
+\item \code{FALL} - Type 1; Fall (i.e. months 9:12)
+}}
 
 \item{years}{the default is \code{NULL}. This parameter allows you to generate datasets for one or
 more specific years.  A value of NULL will result in products being generated for all years for
 which data exists, and a vector of years will result in dataset that include the specified years.}
 
+\item{...}{other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')}
+
 \item{type1TowsOnly}{the default is \code{TRUE}.  "Valid" survey tows (i.e. "type 1") are those 
 tows that fished correctly, and can be used confidently while looking data from a stratified  
 random survey design.  Setting \code{type1TowsOnly} to \code{FALSE} will allow other types of sets 
 to be extracted, but these shouldn't be included while assessing fish stocks.}
-
-\item{...}{other arguments passed to methods (i.e. 'keep_nullsets', debug' and 'quiet')}
 }
 \value{
 a list of dataframes which have been filtered to only include data related to the 

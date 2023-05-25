@@ -17,27 +17,14 @@ stratify <- function(tblList = NULL, ...){
     thisFun <- where_now()
     message(thisFun, ": started")
   }
-  if(!is.null(args$taxa)|!is.null(args$code)|!is.null(args$aphiaid)){
-    tblList      <- filterSpecies(tblList = tblList, ...)
-    if (inherits(tblList,"numeric"))stop("Requested filter removed all species")
-  }
-  #depending on the user's choices (e.g. by sex, binning, taxa), certain stuff needs to be done -
-  #following function does it all, once, overwriting the tblList data with modified versions
   tblList  <- stratify_prepare(tblList = tblList, ...)
-  # dfNWSets <- stratify_makeNWSets(tblList = tblList)
-  
   taxa<- unique(tblList$GSCAT[!is.na(tblList$GSCAT$TAXA_), "TAXA_"])
-  stratInfo <- tblList$GSSTRATUM
-  stratInfo <- addTUNITS(stratInfo)
-  colnames(stratInfo)[colnames(stratInfo)=="AREA"] <- "SQNM"
   
-  taxaSets <-list()
-  taxaSets$stratInfo <- stratInfo
-  for(t in 1:length(taxa)){
-    thisSpecData <- tblList$GSCAT[tblList$GSCAT$TAXA_ == taxa[t], ]
+  prepareSpData <- function(taxa= NULL){
+    thisSpecData <- tblList$GSCAT[tblList$GSCAT$TAXA_ == taxa, ]
     thisTaxSets <- merge(tblList$GSINF, thisSpecData, all.x=T)
-    thisTaxSets[which(is.na(thisTaxSets$TAXA_)),"TAXA_"]<- taxa[t]
-    thisTaxSets[which(is.na(thisTaxSets$TAXARANK_)),"TAXARANK_"] <- tblList$GSSPECIES[which(tblList$GSSPECIES$TAXA_==taxa[t]),"TAXARANK_"]
+    thisTaxSets[which(is.na(thisTaxSets$TAXA_)),"TAXA_"]<- taxa
+    thisTaxSets[which(is.na(thisTaxSets$TAXARANK_)),"TAXARANK_"] <- tblList$GSSPECIES[which(tblList$GSSPECIES$TAXA_==taxa),"TAXARANK_"]
     thisTaxSets <- merge(thisTaxSets, tblList$GSSPECIES[,c("TAXA_", "LGRP")], all.x=T)
     thisTaxSets[which(is.na(thisTaxSets$TOTWGT)),c('TOTWGT','TOTNO')]<- 0
     thisTaxSets[which(is.na(thisTaxSets$TOTWGT_RAW)),c('TOTWGT_RAW')]<- 0
@@ -45,15 +32,20 @@ stratify <- function(tblList = NULL, ...){
     thisTaxSets$TOTWGT[which(!is.finite(thisTaxSets$TOTWGT))] <-1
     thisTaxSets$TOTNO[which(!is.finite(thisTaxSets$TOTNO))] <- 1
     thisTaxSets <- thisTaxSets[c('MISSION','SETNO','STRAT',setdiff(colnames(thisTaxSets), colnames(tblList$GSINF)))]
-    names(thisTaxSets)[names(thisTaxSets) == "AREA"] <- "UNIT_AREA"
     thisTaxSets <- thisTaxSets[with(thisTaxSets,order(MISSION, SETNO)),]
-    
-    theseNW           <- stratify_NW(tblList = tblList, dfNWSets = thisTaxSets, stratInfo = stratInfo)
-    theseLengths      <- stratify_calcLengths(tblList = tblList, dfNWSets=thisTaxSets, stratInfo = stratInfo, ...)
-    theseAges         <- stratify_calcAges(tblList = tblList, dfNWSets=thisTaxSets, stratInfo = stratInfo, 
-                                           stratLengths = theseLengths$length_by_strat_total,...)
-    taxaSets[[paste0(taxa[t])]]$STRAT_INFO <- theseNW$nw_strat_inf
-    theseNW$nw_strat_inf <- NULL
+    names(thisTaxSets)[names(thisTaxSets) == "AREA"] <- "UNIT_AREA"
+    return(thisTaxSets)
+  }
+  
+  taxaSets <-list()
+  for(t in 1:length(taxa)){
+    sexed <- ifelse(tblList$GSSPECIES[tblList$GSSPECIES$TAXA_ == taxa[t], "LFSEXED"]=="Y", TRUE, FALSE)
+    if (sexed != args$bySex) message("You have selected `bySex=", args$bySex, "`, which is unusual for this species (",taxa[t],")") 
+    thisTaxSets <- prepareSpData(taxa= taxa[t])
+    theseNW           <- stratify_NW(tblList = tblList, dfNWSets = thisTaxSets, ...)
+    theseLengths      <- stratify_calcLengths(tblList = tblList, dfNWSets=thisTaxSets, ...)
+    theseAges         <- stratify_calcAges(tblList = tblList, dfNWSets=thisTaxSets, 
+                                           stratLengths = theseLengths$length_by_strat_total, ...)
     taxaSets[[paste0(taxa[t])]]$NUMS_WEIGHTS <- theseNW
     taxaSets[[paste0(taxa[t])]]$LENGTHS <- theseLengths
     taxaSets[[paste0(taxa[t])]]$AGES <- theseAges

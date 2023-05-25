@@ -4,18 +4,13 @@
 \alias{filterSpecies}
 \title{filterSpecies}
 \usage{
-filterSpecies(
-  tblList = NULL,
-  code = NULL,
-  aphiaid = NULL,
-  taxa = NULL,
-  keep_nullsets = NULL,
-  args = NULL
-)
+filterSpecies(tblList = NULL, ...)
 }
 \arguments{
 \item{tblList}{the default is \code{NULL}. This is a list populated with all RV dataframes that
 should have filtering applied to them.}
+
+\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 
 \item{code}{the default is \code{NULL}. If data should be limited to a particular species, enter 
 the species code here}
@@ -27,8 +22,6 @@ enter the aphiaid here.}
 "PHYLUM", "CLASS", "ORDER", "FAMILY", or "GENUS" can be specified (e.g. \code{taxa=c("GADIDAE")})}
 
 \item{keep_nullsets}{the default is \code{TRUE}.}
-
-\item{...}{other arguments passed to methods (i.e. 'debug' and 'quiet')}
 }
 \value{
 a list of filtered versions of the dataframes passed as \code{tblList}. If the
