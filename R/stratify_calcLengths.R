@@ -1,13 +1,13 @@
-#' @title stratify_calcLengths
-#' @description This function ...
-#' @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes. Prior 
-#' to running this function they should all have been filtered via \code{propagateChanges()}
-#' @param dfNWSets this is the output from \code{NW_sets()}.
-#' @param bySex the default is \code{F}. This is ...
-#' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
-#' @returns ...
-#' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
-#' @export
+## @title stratify_calcLengths
+## @description This function ...
+## @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes. Prior 
+## to running this function they should all have been filtered via \code{propagateChanges()}
+## @param dfNWSets this is the output from \code{NW_sets()}.
+## @param bySex the default is \code{F}. This is ...
+## @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
+## @returns ...
+## @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
+## @export
 stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, ...){
   argsFn <- as.list(environment())
   argsFn[["tblList"]] <- NULL

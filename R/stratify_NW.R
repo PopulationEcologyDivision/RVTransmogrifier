@@ -1,13 +1,13 @@
-#' @title stratify_NW
-#' @description This function calculates the stratified values of numbers and weights by strata
-#' @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes. 
-#' Prior to running this function they should all have been filtered via \code{propagateChanges()}.
-#' @param dfNWSets  this is the output from \code{NW_sets()}.
-#' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
-#' @returns ...
-#' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
-#' @importFrom dplyr %>%
-#' @export
+## @title stratify_NW
+## @description This function calculates the stratified values of numbers and weights by strata
+## @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes. 
+## Prior to running this function they should all have been filtered via \code{propagateChanges()}.
+## @param dfNWSets  this is the output from \code{NW_sets()}.
+## @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
+## @returns ...
+## @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
+## @importFrom dplyr %>%
+## @export
 stratify_NW<-function(tblList = NULL, dfNWSets= NULL, ...){
   argsFn <- as.list(environment())
   argsFn[["tblList"]] <- NULL

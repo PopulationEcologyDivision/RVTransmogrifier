@@ -88,34 +88,34 @@ expandDF <- function(templateDF = NULL, keyFields = NULL, expandField= NULL, exp
   return(newDF)
 }
 
-#' @title addTUNITS
-#' @description This function .
-#' @param stratum the default is \code{NULL}. This is a dataframe of strata, each with an AREA field
-#' in square nautical miles.
-#' @param towDist the default is \code{1.75}. 
-#' @param wingspread the default is \code{41}. 
-#' @returns the original \code{stratum} object, but with an additional \code{TUNITS} field.
-#' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
-#' @note GSWARPOUT, GSCRUISELIST and GSSPEC can NOT be used to filter the other tables.
-#' @export
+## @title addTUNITS
+## @description This function .
+## @param stratum the default is \code{NULL}. This is a dataframe of strata, each with an AREA field
+## in square nautical miles.
+## @param towDist the default is \code{1.75}. 
+## @param wingspread the default is \code{41}. 
+## @returns the original \code{stratum} object, but with an additional \code{TUNITS} field.
+## @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
+## @note GSWARPOUT, GSCRUISELIST and GSSPEC can NOT be used to filter the other tables.
+## @export
 addTUNITS<- function(stratum = NULL,towDist = 1.75, wingspread = 41){
   #calculate strat areas into tunits; US nautical mile is 6080.2ft
   stratum$TUNITS <- NA
   stratum$TUNITS <-stratum$AREA/(towDist * (wingspread/6080.2))
   return(stratum)
 }
-#' @title roundDD2Min
-#' @description This function can be used to round decimal degrees to the nearest geographic minute.  
-#' It can be set to round up or down, and is useful for generating plots with boundaries that make sense.
-#' @param x this is value that should be rounded.
-#' @param how the default is \code{"round"}, but values of \code{"ceiling"} and \code{"floor"} are also 
-#' acceptable. \code{"round"} just rounds the value, while the others forcibly round it up or down 
-#' (respectively) to the nearest minute.
-#' @param nearestMin the default is \code{1}, but values between 1 and 60 make sense. 
-#' @param digits the default is \code{4}.  This is how many decimal places the resultant data should be rounded to.
-#' @returns the original value, but rounded.
-#' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
-#' @export
+## @title roundDD2Min
+## @description This function can be used to round decimal degrees to the nearest geographic minute.  
+## It can be set to round up or down, and is useful for generating plots with boundaries that make sense.
+## @param x this is value that should be rounded.
+## @param how the default is \code{"round"}, but values of \code{"ceiling"} and \code{"floor"} are also 
+## acceptable. \code{"round"} just rounds the value, while the others forcibly round it up or down 
+## (respectively) to the nearest minute.
+## @param nearestMin the default is \code{1}, but values between 1 and 60 make sense. 
+## @param digits the default is \code{4}.  This is how many decimal places the resultant data should be rounded to.
+## @returns the original value, but rounded.
+## @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
+## @export
 roundDD2Min<-function(x=NULL, how = "round", nearestMin = 1, digits=4){
   minDD = 0.016666666666 #this is 1 min in DD
   base = nearestMin*minDD

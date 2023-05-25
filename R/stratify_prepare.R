@@ -1,12 +1,12 @@
-#' @title stratify_prepare
-#' @description This function prepares a df for every encountered taxa that will be used for stratification.
-#' @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes. Prior 
-#' to running this function they should all have been filtered via \code{propagateChanges()}.
-#' @param towDist the default is \code{1.75}. This is the default tow length for the survey.
-#' @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
-#' @returns ...
-#' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
-#' @export
+## @title stratify_prepare
+## @description This function prepares a df for every encountered taxa that will be used for stratification.
+## @param tblList the default is \code{NULL}. This is a list populated with all RV dataframes. Prior 
+## to running this function they should all have been filtered via \code{propagateChanges()}.
+## @param towDist the default is \code{1.75}. This is the default tow length for the survey.
+## @param ... other arguments passed to methods (i.e. 'debug' and 'quiet')
+## @returns ...
+## @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
+## @export
 stratify_prepare<-function(tblList = NULL, ...){
   argsFn <- as.list(environment())
   argsFn[["tblList"]] <- NULL
