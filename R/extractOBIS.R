@@ -7,7 +7,7 @@
 #' @returns a dataframe
 #' @author  Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca} \cr Heidi van Vliet
 #' \email{Heidi.vanVliet@@dfo-mpo.gc.ca}
-#' @importFrom dplyr %>%
+#' @importFrom magrittr %>%
 #' @export
 extractOBIS <- function(survey = NULL, years = NULL, ...){
   args <- list(...)

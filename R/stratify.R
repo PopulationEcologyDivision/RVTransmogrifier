@@ -5,7 +5,7 @@
 #' @param ... other arguments passed to methods (i.e. 'towDist', 'debug' and 'quiet')
 #' @returns ...
 #' @author Mike McMahon, \email{Mike.McMahon@@dfo-mpo.gc.ca}
-#' @importFrom dplyr %>%
+#' @importFrom magrittr %>%
 #' @export
 stratify <- function(tblList = NULL, ...){
   argsFn <- as.list(environment())
