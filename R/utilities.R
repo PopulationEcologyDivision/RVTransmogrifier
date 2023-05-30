@@ -17,7 +17,8 @@ where_now <- function (callstack = sys.calls())
   return(cs)
 }
 
-st_err <- function (x = NULL) {
+st_err <- function (x = NULL, na.rm=T) {
+  x<-x[!is.na(x)]
   stats::sd(x)/sqrt(length(x))
 }
 combine_lists <- function(primary = NULL, ancilliary = NULL){ 

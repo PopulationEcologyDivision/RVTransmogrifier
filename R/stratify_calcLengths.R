@@ -82,7 +82,8 @@ stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, ...){
   #rbinding made my numbers characters - change it back, but strat needs to be char still
   length_by_strat_mean[] <- lapply(length_by_strat_mean, function(x) type.convert(as.character(x), as.is = TRUE))
   length_by_strat_mean$STRAT <- as.character(length_by_strat_mean$STRAT)
-  
+  length_by_strat_mean %>% tail()
+
   length_by_strat_se <- length_by_set %>%
     select(-SETNO,-TOTAL) %>% 
     group_by(MISSION, STRAT) %>%
@@ -91,6 +92,19 @@ stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, ...){
     arrange(MISSION, STRAT) %>%
     select(MISSION, STRAT, sort(names(.))) %>%
     as.data.frame()
+  tblList$dataDETS %>% tail()
+  tblList$dataLF %>% tail()
+  
+  
+  # length_by_strat_se_tots <- tblList$dataDETS %>%
+  #   select("MISSION","FSEX", "FLEN", "FWT") %>% 
+  #   filter(!is.na(FWT)) %>% 
+  #   mutate(FSEX= case_when(args$bySex ==T ~ FSEX, 
+  #                          args$bySex != T ~9)) %>%  
+  #   group_by(MISSION, FSEX, FLEN) %>%
+  #   summarise(across(everything(), st_err), .groups = 'keep')
+  # 
+  # browser()
 
   length_by_strat_total <- length_by_strat_mean %>% 
     select(-TOTAL) %>% 
@@ -109,6 +123,16 @@ stratify_calcLengths<-function(tblList = NULL, dfNWSets = NULL, ...){
   length_by_strat_total_tots <- colSums(length_by_strat_total[,!names(length_by_strat_total) %in% c("MISSION", "STRAT")])
   length_by_strat_total_tots<- c("TOTAL", NA, length_by_strat_total_tots)
   length_by_strat_total<- rbind.data.frame(length_by_strat_total,length_by_strat_total_tots)
+
+  
+  # #avg weights per length/age for alw are not limited to aged fish 
+  # alw_avgs <- tblList$dataDETS %>%
+  #   mutate(FSEX= case_when(args$bySex ==T ~ FSEX, 
+  #                          args$bySex != T ~9)) %>%  
+  #   group_by(MISSION, FSEX, FLEN) %>%
+  #   summarise(AVG_WGT =  round(mean(FWT, na.rm=T)/1000,5), .groups = 'keep')
+  # 
+  # alw <- merge(alw, alw_avgs)
   
   length_by_strat_total_se <- length_by_strat_se %>% 
     left_join(., tblList$GSSTRATUM[, c("STRAT", "TUNITS")], by="STRAT") %>% 

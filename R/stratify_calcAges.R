@@ -21,7 +21,6 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratLengths=NULL,.
     rename(.,"TOTAL"="V1") %>%
     mutate(TOTAL = as.numeric(TOTAL),
            FLEN = rownames(.))
-
   
   #######################
   alk_pre <- filter(tblList$dataDETS, !is.na(AGE) & TAXA_ == thisTAXA) %>%
@@ -47,7 +46,7 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratLengths=NULL,.
     mutate(FSEX= case_when(args$bySex ==T ~ FSEX, 
                            args$bySex != T ~9)) %>% 
     group_by(MISSION, FSEX, FLEN, AGE) %>%
-    summarise(FWT = mean(FWT)/1000, .groups = 'keep') %>%
+    summarise(FWT = round(mean(FWT)/1000,5), .groups = 'keep') %>%
     as.data.frame()
   
   alw_lengths <- seq(min(alw_pre$FLEN, na.rm = T),max(alw_pre$FLEN, na.rm = T), by=thisLGRP)
@@ -60,50 +59,23 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratLengths=NULL,.
     tidyr::pivot_wider(names_from = c(AGE), values_from = FWT, values_fill = 0)%>%
     as.data.frame() %>% 
     arrange(MISSION, FSEX, FLEN) 
-   
+  alw_naked <- alw
+  #avg weights per length/age for alw are not limited to aged fish 
+  alw_avgs <- tblList$dataDETS %>%
+    mutate(FSEX= case_when(args$bySex ==T ~ FSEX, 
+                           args$bySex != T ~9)) %>%  
+    group_by(MISSION, FSEX, FLEN) %>%
+    summarise(AVG_WGT =  round(mean(FWT, na.rm=T)/1000,5), .groups = 'keep')
+  
+  alw <- merge(alw, alw_avgs)
   #add totals to age table
+  
   alk <- alk_pre %>%
     mutate(TOTAL = rowSums(.[,!names(.) %in% c("MISSION", "FSEX", "FLEN")], na.rm = T)) %>% 
     as.data.frame()
   alk_tots <- c("TOTAL",NA,NA,colSums(alk[,!names(alk) %in% c("MISSION", "FSEX", "FLEN")]))
   alk<-rbind(alk,alk_tots)
-
-  # for (w in 1:length(alw_sexes)){
-  #   thisALWSexProp <- alw[alw$FSEX ==alw_sexes[w] ,]
-  #   thisALWSexProp[!names(thisALWSexProp) %in% c("MISSION", "FSEX", "FLEN")] <- thisALWSexProp[!names(thisALWSexProp) %in% c("MISSION","FSEX","FLEN")]/rowSums(thisALWSexProp[!names(thisALWSexProp) %in% c("MISSION","TAXA_", "FSEX","FLEN")])
-  #   thisALWSexProp[is.na(thisALWSexProp)] = 0
-  #   if (w==3) browser()
-  #   thisSexStratTots <- stratTots[grepl(x= stratTots$FLEN, pattern = paste0(alw_sexes[w],"_")),]
-  #   thisSexStratTots$FLEN <- as.numeric(sub(paste0("^",alw_sexes[w],"_"), "", thisSexStratTots$FLEN))
-  #   thisSexAlw<- thisALWSexProp %>% left_join(., thisSexStratTots, by="FLEN")
-  # 
-  #   thisSexAlw <- thisSexAlw %>% 
-  #     mutate(across(-c("MISSION","FSEX", "FLEN","TOTAL"), ~ . * TOTAL)) %>% 
-  #     select(-TOTAL)  %>% 
-  #     sexifyNames(desc="AGE") %>%
-  #     select(MISSION, FSEX, FLEN, sort(names(.))) %>% 
-  #     arrange(MISSION, FSEX, FLEN) %>% 
-  #     as.data.frame()
-  #   if(w==1) {
-  #     alwTable <- thisSexAlw
-  #     sexProp <- thisALWSexProp
-  #     thisAvgWgts<- cbind(thisSexAlw[,c("MISSION", "FSEX","FLEN")], prop.table(as.matrix(thisSexAlw[,4:ncol(thisSexAlw)]), margin=2)) %>% 
-  #       mutate(across(-c("MISSION","FSEX", "FLEN"), ~ . * FLEN)) %>% 
-  #       select(-MISSION,-FSEX,-FLEN) %>% colSums() %>% as.vector() %>% c(c("AVG_WGT", alw_sexes[w], NA),.) %>% 
-  #       t() %>% 
-  #       as.data.frame()
-  #   }else{
-  #     alwTable <- rbind.data.frame(alwTable, thisSexAlw)
-  #     sexProp <- rbind.data.frame(sexProp,thisALWSexProp)
-  #     thisAvgWgts <- cbind(thisSexAlw[,c("MISSION", "FSEX","FLEN")], prop.table(as.matrix(thisSexAlw[,4:ncol(thisSexAlw)]), margin=2)) %>% 
-  #       mutate(across(-c("MISSION","FSEX", "FLEN"), ~ . * FLEN)) %>% 
-  #       select(-MISSION,-FSEX,-FLEN) %>% colSums() %>% as.vector() %>% c(c("AVG_WGT", alw_sexes[w], NA),.) %>% 
-  #       t() %>% 
-  #       as.data.frame() %>% 
-  #       bind_rows(.,thisAvgWgts)
-  #   }
-  # }
-  # 
+  
   for (s in 1:length(alk_sexes)){
     thisSexProp <- alk_pre[alk_pre$FSEX %in% alk_sexes[s] ,]
     thisSexProp[!names(thisSexProp) %in% c("MISSION", "FSEX", "FLEN")] <- thisSexProp[!names(thisSexProp) %in% c("MISSION","FSEX","FLEN")]/rowSums(thisSexProp[!names(thisSexProp) %in% c("MISSION","TAXA_", "FSEX","FLEN")])
@@ -159,10 +131,81 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratLengths=NULL,.
     t() %>% 
     as.data.frame()
   colnames(allAvgLengths) <- colnames(ageTable)  
+  ageTable_naked <- ageTable[ageTable$MISSION != "AVG_LENGTH",]
   ageTable <- rbind.data.frame(ageTable,allAvgLengths)
   ageTable[] <- lapply(ageTable, function(x) type.convert(as.character(x), as.is = TRUE))
   ageTable[is.nan(ageTable)] <- NA
   
+  #naked tables below are just the MISSION/FSEX/FLEN and data without any summary rows/columns
+  #0 values in any column (except FSEX) become NA so they don't influence means and other 
+  #calculations
+  #*_comb is for "combined" (ie all sexes together)
+  
+  alw_naked<- alw_naked %>% 
+    mutate_at(vars(-FSEX), ~na_if(.,0))
+  if (args$bySex){
+    ageTable_naked_Means_bySex <- ageTable_naked %>%  
+      mutate_at(vars(-FSEX), ~na_if(.,0)) %>% 
+      select(-FLEN) %>% 
+      group_by(MISSION, FSEX) %>%
+      summarise(across(everything(), mean, na.rm = T),.groups = "keep") %>% 
+      mutate_at(vars(-group_cols()),~ifelse(is.nan(.), NA, .)) %>% as.data.frame()
+  }
+  ageTable_naked_Means_comb <- ageTable_naked %>%  
+    mutate_at(vars(-FSEX), ~na_if(.,0)) %>% 
+    mutate(FSEX=9) %>% 
+    select(-FLEN) %>% 
+    group_by(MISSION, FSEX) %>%
+    summarise(across(everything(), mean, na.rm = T),.groups = "keep") %>% 
+    mutate_at(vars(-group_cols()),~ifelse(is.nan(.), NA, .)) %>% as.data.frame()
+  
+  age_product <- data.frame(
+    Map(function(x,y) if(all(is.numeric(x),is.numeric(y))) x * y else x, alw_naked[,!names(alw_naked) %in% c("MISSION", "FSEX", "FLEN")], 
+        ageTable_naked[,!names(ageTable_naked) %in% c("MISSION", "FSEX", "FLEN")])
+  )
+  age_product <- cbind.data.frame(ageTable_naked[,names(ageTable_naked) %in% c("MISSION", "FSEX")], age_product)
+  
+  if (args$bySex){
+    age_product_Means_bySex <- age_product %>%
+      group_by(MISSION, FSEX) %>%
+      summarise(across(everything(), mean, na.rm = T),.groups = "keep") %>% 
+      mutate_at(vars(-group_cols()),~ifelse(is.nan(.), NA, .)) %>% 
+      mutate(SRC = "product") %>% as.data.frame()
+    
+    ageTable_naked_Means_bySex$SRC <- "AgeTable" 
+    names(age_product_Means_bySex)<- names(ageTable_naked_Means_bySex)
+    allSummaries_bySex <- rbind.data.frame(age_product_Means_bySex, ageTable_naked_Means_bySex)
+  }
+  
+  age_product_Means_comb <- age_product %>% 
+    mutate(FSEX=9)  %>% 
+    group_by(MISSION, FSEX) %>%
+    summarise(across(everything(), mean, na.rm = T),.groups = "keep") %>% 
+    mutate_at(vars(-group_cols()),~ifelse(is.nan(.), NA, .)) %>% 
+    mutate(SRC = "product") %>% as.data.frame()
+  
+  ageTable_naked_Means_comb$SRC <- "AgeTable" 
+  names(age_product_Means_comb)<- names(ageTable_naked_Means_comb)
+  
+  allSummaries_comb <- rbind.data.frame(age_product_Means_comb, ageTable_naked_Means_comb)
+  
+  if (args$bySex){
+    allSummaries <- rbind(allSummaries_comb,  allSummaries_bySex)
+  }else{
+    allSummaries <- allSummaries_comb
+  }
+  allSex  <- sort(unique(allSummaries$FSEX))
+  avgWgts <- allSummaries[F,!names(allSummaries) %in% c("SRC")]
+  for (x in 1:length(allSex)){
+    these <- allSummaries[allSummaries$FSEX == allSex[x],]
+    these <- these[these$SRC=="product", !names(these) %in% c("MISSION", "FSEX", "SRC")]/    these[these$SRC=="AgeTable", !names(these) %in% c("MISSION", "FSEX", "SRC")]
+    avgWgts[x,"MISSION"]<-allSummaries[1,"MISSION"]
+    avgWgts[x,"FSEX"]<-allSex[x]
+    avgWgts[x,!names(avgWgts) %in% c("MISSION", "FSEX")]<-these
+  }
+  avgWgts$FLEN <- avgWgts$AVG_WGT <- NA
+  alw <- rbind.data.frame(alw,avgWgts)
+
   dfAge <- tblList$dataLF %>%  
     filter(TAXA_ == thisTAXA & !is.na(FLEN) & !is.na(CLEN)) %>%
     mutate(FSEX= case_when(args$bySex ==T ~ FSEX, 
@@ -206,7 +249,7 @@ stratify_calcAges<-function(tblList = NULL, dfNWSets = NULL, stratLengths=NULL,.
     select(-one_of('TOTAL'), one_of('TOTAL')) %>%
     as.data.frame() 
   if (args$debug)message("The bottom row total of age_by_strat_mean is not the sum of the columns - need to figure out what it is")
-  
+
   age_by_strat_se <- age_by_set %>% 
     select(-SETNO) %>% 
     group_by(MISSION, STRAT)  %>% 

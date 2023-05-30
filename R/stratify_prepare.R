@@ -24,7 +24,7 @@ stratify_prepare<-function(tblList = NULL, ...){
   #if present, berried females (3) are re-categorized as 2
   dataLFFixed[which(dataLFFixed$FSEX==3),"FSEX"] <- 2
   dataDETSFixed[which(dataDETSFixed$FSEX==3),"FSEX"] <- 2
-  
+
   ##### correct FLEN #####
   if (!args$useBins) {
     dataLFFixed$LGRP <- 1

@@ -127,6 +127,8 @@ stratify_NW<-function(tblList = NULL, dfNWSets= NULL, ...){
   
   nw_strat <- rbind.data.frame(nw_strat,nw_strat_tots)
   nw_strat <- merge(nw_strat_inf, nw_strat, by="STRAT")
+  # browser()
+  # nw_set %>% select(STRAT, BIOMASS_) %>% mutate_all(~na_if(., 0)) %>% summarise(mean(BIOMASS_, na.rm = T))
   
   res_nw$nw_set <- nw_set[,c("MISSION", "STRAT", "SETNO", "TOTNO", "TOTWGT")] %>% 
     arrange(MISSION, SETNO) %>% 
