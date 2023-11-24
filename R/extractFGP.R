@@ -24,7 +24,6 @@ extractFGP <- function(survey = NULL, years=NULL){
     }else{
       fn <- paste0(years[1],"_",survey[i],"_",ts)
     }
-
     this <- getSurvey(survey=survey[i], years = years)
     if (is.numeric(this))stop("Your query did not return valid results")
 
