@@ -199,10 +199,10 @@ ggCatchPts <- function(catchdata = NULL, sizeVar=NULL, colourVar = NULL, return=
   ggItems<- list()
   if (return=="CATCHES"){
     if(length(colourVar)>1){
-      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes(x=SLONG_DD, y=SLAT_DD, size = sizeVar, colour=colourVar[1]), alpha = 0.6)
+      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes_string(x="SLONG_DD", y="SLAT_DD", size = sizeVar, colour=colourVar), alpha = 0.6)
       ggItems[["catchPts"]] <- c(ggItems[["catchPts"]],ggplot2::scale_color_discrete(name=colourVar[1], labels=paste0(catchdata[!is.na(catchdata[,sizeVar]),colourVar[1]]," (",catchdata[!is.na(catchdata[,sizeVar]),colourVar[2]],")")))
     }else{
-      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes(x=SLONG_DD, y=SLAT_DD, size = sizeVar, colour=colourVar), alpha = 0.6)
+      ggItems[["catchPts"]] <- ggplot2::geom_point(data=catchdata[!is.na(catchdata[,sizeVar]),], ggplot2::aes_string(x="SLONG_DD", y="SLAT_DD", size = sizeVar, colour=colourVar), alpha = 0.6)
     }
     ggItems[["catchPts"]] <- c(ggItems[["catchPts"]], ggplot2::scale_size_continuous(range = c(2,8)))
   }

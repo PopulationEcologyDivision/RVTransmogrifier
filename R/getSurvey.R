@@ -43,7 +43,7 @@ getSurvey<-function(survey = NULL, years=NULL, ...){
     tblList$GSMISSIONS <- tblList$GSMISSIONS[which(tblList$GSMISSIONS$YEAR %in% c(years)),]
   }
   if (survey %in% c("4VSW", "4X", "GEORGES", "SPRING")){
-    tblList$GSINF <- tblList$GSINF[-which(lubridate::month(tblList$GSINF$SDATE) %in% c(1,2,3,4)),]
+    tblList$GSINF <- tblList$GSINF[which(lubridate::month(tblList$GSINF$SDATE) %in% c(1,2,3,4)),]
     if(survey == "4VSW"){
       tblList$GSINF <- tblList$GSINF[tblList$GSINF$STRAT %in% c('396','397', '398', '399', '400', 
                                                      '401', '402', '403', '404', '405', '406', '407', 
@@ -93,7 +93,10 @@ getSurvey<-function(survey = NULL, years=NULL, ...){
     
   }
   tblList<-propagateChanges(tblList = tblList, taxaAgg=F,...)
+  
+  if (nrow(tblList$GSMISSIONS)<1 | nrow(tblList$GSINF)<1) stop("The selected survey does not appear to have data for any of the selected years")
   tblList <- filterSpecies(tblList = tblList, ...)
+
   if(args$debug) message(thisFun, ": completed (",round( difftime(Sys.time(),startTime,units = "secs"),0),"s)")
   return(tblList)
 }

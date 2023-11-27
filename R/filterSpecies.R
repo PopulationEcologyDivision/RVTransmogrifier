@@ -31,7 +31,6 @@ filterSpecies <- function(tblList = NULL, ...){
   }
   #if nothing is to be filtered, skip.
   # if (all(is.null(args$code), is.null(args$aphiaid), is.null(args$taxa))) return(tblList)
- 
   if (!is.null(args$aphiaid)) {
     if (!is.null(args$taxa)){
       message("Only one filter type  (i.e. code, taxa, aphiaid) can be done at once. Only 'aphiaid' will be used.")

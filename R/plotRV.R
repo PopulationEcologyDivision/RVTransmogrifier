@@ -77,7 +77,7 @@ plotRV <- function(tblList = NULL,
   ggItems <- list()
   sf::sf_use_s2(FALSE)
   #set up the basic plot
-  browser()
+
   p <-ggplot2::ggplot() + ggplot2::theme_bw()
   ggItems[["bathy"]]      <- ggBathy(plotBathy=plotBathy, bathyIntervals=bathyIntervals)
   ggItems[["bkgdStrata"]] <- ggStrata(plotStrata=plotStrata, plotLabels=labelStrata, filter=unique(tblList$GSINF$STRAT))

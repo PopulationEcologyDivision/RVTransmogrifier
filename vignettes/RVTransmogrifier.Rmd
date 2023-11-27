@@ -6,8 +6,7 @@ author: "Mike McMahon"
 email: "Mike.McMahon@dfo-mpo.gc.ca"
 affiliation: "Population Ecology Division - Fisheries and Oceans Canada"
 output: 
-    rmarkdown::html_vignette: default
-    rmarkdown::pdf_document: 
+    rmarkdown::pdf_document: default
     engine: pdfLaTeX
   
 vignette: >
@@ -19,7 +18,11 @@ vignette: >
   % \VignetteDepends{sf} 
   \usepackage[utf8]{inputenc}
 ---
-```{r, include=FALSE}
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r, dependencies, include=FALSE}
 library(RVSurveyData)
 library(Mar.utils)
 
@@ -35,7 +38,8 @@ library(sf)
 
 sourcery(Rdir = "C:/git/PopulationEcologyDivision/RVTransmogrifier/R/")
 ```
-(<img src="transmogrifier_400x400.jpg" width="200" height="200" />)[https://calvinandhobbes.fandom.com/wiki/Transmogrifier "an actual transmogrifier"]
+
+[![an actual transmogrifier](transmogrifier_400x400.jpg){width="200" height="200"}](https://calvinandhobbes.fandom.com/wiki/Transmogrifier "an actual transmogrifier")
 
 [**trans·mog·ri·fy**](https://www.merriam-webster.com/dictionary/transmogrify)
 *verb* <font style="font-size:9pt; font-style:bold">HUMOROUS</font>
@@ -46,146 +50,16 @@ sourcery(Rdir = "C:/git/PopulationEcologyDivision/RVTransmogrifier/R/")
 The [RVSurveyData])(https://github.com/PopulationEcologyDivision/RVSurveyData) package is a data-only package, and does not contain any tools for making sense of its' data. This package  [(RVTransmogrifier)](https://github.com/PopulationEcologyDivision/RVTransmogrifier) is not strictly necessary, but it endeavours to make working with the RV data a bit easier.  It includes tools for loading, filtering and plotting the data, as well as reformatting it for contribution to different systems.
 
 ## Installation
-```{r eval=FALSE}
+```{r install-RVTransmogrifier, eval=FALSE}
 devtools::install_github("PopulationEcologyDivision/RVTransmogrifier")
 ```
 
-## Accessing Survey Data
-Generally, when working with the RV Survey data, only a subset of the 50 years of data is desired for any given analysis.  Whether the interest is a particular survey, a particular species, or a particular area, a number of filtering steps will required, and the filtering requires a bit of specialized knowledge.    
-
-For example, if we are interested in the cod caught during the 2016 summer survey, we might do the following:
-```{r}
-library(RVSurveyData)
-# limit missions to desired year and season
-GSMISSIONS <- GSMISSIONS[GSMISSIONS$YEAR == 2016 & GSMISSIONS$SEASON == "SUMMER",]
-# limit sets to valid stratified random sets only
-GSINF      <- GSINF[GSINF$MISSION %in% GSMISSIONS$MISSION & GSINF$TYPE==1,]
-# limit to cod
-GSCAT      <- merge(GSCAT[GSCAT$SPEC == 10,], GSINF[,c("MISSION","SETNO")])
-# retain only detailed records for matching records
-dataDETS   <- merge(dataDETS, GSCAT[,c("MISSION","SETNO","SPEC")])
-
-rm(list=c("GSMISSIONS", "GSINF", "GSCAT", "dataDETS"))
-
-# nrow(dataDETS) 946
-#... the amount of filtering would depend on what filters you required
-```
-While the steps above were not particularly onerous, they required a degree of familiarity with the data that most people don't have (i.e. which fields to filter on, which set types to include, and which fields are needed to join the various tables together, etc).
-
-Below is an example of using RVTransmogrify to extract the same Summer 2016 survey data.  `getSurvey()` results in a single list object that contains all of the individual data objects the survey.
-
-```{r}
-cod_2016_transmogrified <- getSurvey("SUMMER", years = 2016, code=10)
-nrow(cod_2016_transmogrified$GSINF)
-```
-If we look at the number of rows remaining from each filtering method, we can see they're the same:
-```{r}
-message("manual filtering")
-paste("GSMISSIONS:", nrow(GSMISSIONS))
-paste("GSINF:", nrow(GSINF))
-paste("GSCAT:", nrow(GSCAT))
-paste("dataDETS:", nrow(dataDETS))
-
-message("RVTransmogrifier filtering")
-paste("cod_2016_transmogrified$GSMISSIONS:",nrow(cod_2016_transmogrified$GSMISSIONS))
-paste("cod_2016_transmogrified$GSINF:",nrow(cod_2016_transmogrified$GSINF))
-paste("cod_2016_transmogrified$GSCAT:",nrow(cod_2016_transmogrified$GSCAT))
-paste("cod_2016_transmogrified$dataDETS:",nrow(cod_2016_transmogrified$dataDETS))
-```
-
-
-3. Merge together appropriate objects...
-```{r}
-cod_2016_wrangled <- merge(GSCAT, GSINF, all.y=T, by=c("MISSION", "SETNO"))
-```
-
-
-
-4. Generate a plot...
-```{r, fig.width = 10}
-codPlot <-  ggplot2::ggplot()
-# add cod data
-codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD, size=TOTWGT), colour="blue")
-#add nullsets
-codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[is.na(cod_2016_wrangled$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD), shape = 3, colour="black", size = 2)
-# add some land
-codPlot <- codPlot + ggplot2::geom_polygon(data = RVSurveyData::maritimesLand, ggplot2::aes(x = long, y = lat, group = group), fill = "darkgrey", color = NA) 
-# set the extent of the plot using the data
-limits<- c(range(cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),"SLONG_DD"]),range(cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),"SLAT_DD"]))
-codPlot <- codPlot + ggplot2::coord_sf(xlim = c(limits[1],limits[2]), ylim = c(limits[3], limits[4]))
-# pretty up the labels a bit
-codPlot <- codPlot + ggplot2::labs(x="Longitude", y="Latitude", size = "Total Weight (kgs)")
-#show it
-codPlot
-```
-The results above do make a reasonable plot, but they took quite a few steps.  Further, the plotted data includes a number of points which shouldn't be used for assessing fish stocks (shown in red, below).
-```{r, fig.width = 10}
-codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[cod_2016_wrangled$TYPE!=1,], aes(x = SLONG_DD, y=SLAT_DD), shape = 4, colour="red", size = 4)
-codPlot
-```
-
-
-RVTransmogrifier reduces all of the steps above into 
-
-### The Easy Way
-
-The data can be viewed relatively easily.  Below, we list the names of all of the objects, and get 
-the first few records of some of them.
-```{r}
-names(cod_2016_transmogrified)
-
-head(cod_2016_transmogrified$GSCAT)
-head(cod_2016_transmogrified$GSINF)
-head(cod_2016_transmogrified$GSSPECIES)
-```
-
-Generating a plot of the same cod data is made easier through the `plotRV()` function.  Additionally, the plot is a bit more polished and can include bathymetry:
-
-```{r, fig.width = 10,  warning=FALSE}
-plotRV(cod_2016_transmogrified, plotSets = "TOTWGT", plotBathy = "FILL")  
-```
-<!-- Because all of the data is held in the same object, generating plots for a number of species at once becomes straightforward: -->
-<!-- ```{r, fig.width = 15,  warning=FALSE} -->
-<!-- species <- c(14,42,2550) #, Silver hake/yellowtail flounder/lobster -->
-<!-- for (s in species){ -->
-<!--   spPlot <- plotRV(cod_2016_transmogrified, code=s, plotSets = "TOTWGT", plotBathy = "FILL") -->
-<!--   print(spPlot) -->
-<!-- } -->
-<!-- ``` -->
-
-
-## extractFGP - Generating Data for Open Data Canada
-Data from the RV Survey Data dataset exists on [Open Data Canada](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b):
-
-* [Summer](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/dd481775-53e2-485f-ba3c-f5395d07a4a5)
-* [Spring](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/dd481775-53e2-485f-ba3c-f5395d07a4a5)
-* [Fall](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/73154215-9d65-48ba-9cc3-cdce97b81489)
-* [4VSW](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/2613c2f6-412e-48ce-85ae-be5bbd25d0cc)
-
-With RVTransmogrifier, as new data becomes available, the data products provided to Open Data can now be generated virtually instantly.  The following command will build the shapefiles and csv files for the SUMMER, SPRING, FALL and 4VSW surveys for all years for which data is available for each survey (i.e. varies, but 1970+). 
-
-```{r eval=FALSE}
-extractFGP()
-```
-Additionally, if there is a need to generate Open Data Canada - style datasets for only a subset of year(s) and/or survey(s), it can be accomplished by providing a couple parameters:
-```{r eval=FALSE}
-extractFGP(years = 2021, survey=c("SPRING", "SUMMER"))
-```
-
-## extractOBIS - Generating Data for OBIS Canada (in progress)
-Data from the RV Survey Data dataset also exists on [OBIS](https://obis.org/):
-
-* [Summer](http://ipt.iobis.org/obiscanada/resource?r=maritimes_summer_rv_surveys)
-* [Spring](http://ipt.iobis.org/obiscanada/resource?r=maritimes_spring_rv_surveys)
-* [Fall](http://ipt.iobis.org/obiscanada/resource?r=maritimes_fall_rv_surveys)
-* [4VSW](http://ipt.iobis.org/obiscanada/resource?r=maritimes_4vsw_rv_surveys)
-
-`extractOBIS()` will function virtually identically to `extractFGP()` - facilitating the creation of OBIS-compliant datasets immediately after new survey data has been QC'd.
-
-## Querying data - propagateChanges()
+## Querying data
+### Introduction
 This package pulls data from the [RVSurveyData package](https://github.com/PopulationEcologyDivision/RVSurveyData) into a list, and can cascade user-imposed filters performed on a single data object to all of the other related data objects.  Anyone having used the [Mar.datawrangling package](https://github.com/Maritimes/Mar.datawrangling) will find this process familiar.  
 
 For example, if we wanted to limit the entire RV Survey data to only data associated with:
+
 * species = cod (i.e Gadus morhua (code=10))
 * years 2014 and 2015
 * summer
@@ -221,67 +95,10 @@ At this point, every table within the `data` object will only hold information d
 plot(data$dataLF$FLEN, data$dataLF$FWT, pch = 19, col=factor(data$dataLF$MISSION))
 legend("topleft", pch = 19, legend = unique(factor(data$dataLF$MISSION)), col = unique(factor(data$GSDET$MISSION)))
 ```
-<img src="cod_summ_2014_2015.png" width="400" />
 
 To "reset" the data (and remove any filtering), one would just re-run `loadRVData()` and overwrite the filtered dataset.
 
-## Plotting data - plotRV()
-To facilitate plotting of the data generated by this package, `plotRV()` is provided. Continuing with the example above, to plot the cod data from the summers of 2014 and 2015, one can do:
-```{r eval=FALSE}
-plotRV(data, title = "Cod: Summer 2014 and 2015")
-```
-which generates this:
-
-<img src="plotrv_cod_summ_2014_2015.png" width="400" />
-
-Less initially-filtered datasets can also be plotted, as species codes and aphiaids can be sent as 
-parameters.  This means that a dataset can be created with a series of filters, and a loop can be 
-created to generate numerous plots (e.g. one per species). 
-## Getting Data for a Specific Survey
-A particular survey is defined by a combination parameters, including:
-  1. a range of months;
-  2. a particular set of strata; and
-  3. a particular tow 'type' (i.e. a "Stratified random survey set")
-Because getting all of these things correct can be a little difficult, [getSurvey()](https://github.com/PopulationEcologyDivision/RVTransmogrifier/blob/main/R/getSurvey.R) is included to ensure they are applied correctly.  Following are examples for extracting the Spring 2016 survey data and the 2008 4VSW Survey data for 2005 and 2006:
-
-```{r eval=FALSE}
-spring_2016 <- getSurvey(survey = "SPRING", years = 2016)
-
-surv_4VSW_2005_2006 <- getSurvey(survey = "4VSW", years = c(2005,2006))
-```
-and you were only interested in the squid from the Spring 2016 survey, you might further do
-```{r eval=FALSE, include=FALSE}
-# figure out code for 'Illex'
-spring_2016$GSSPECIES_20220624[grepl("ILLEX",spring_2016$GSSPECIES_20220624$SPEC),]
-> CODE               SPEC            COMM COMMENTS VALID_SPP   TSN APHIAID TAXON_STATUS ...
-> 4511 ILLEX ILLECEBROSUS SHORT-FIN SQUID     <NA>         1 82521  153087         <NA> ...
-
-# filter the species table to just get Illex
-spring_2016$GSSPECIES_20220624 <- spring_2016$GSSPECIES_20220624[spring_2016$GSSPECIES_20220624$CODE == 4511,]
-
-# cascade the filter above to limit all of the data to just those records related to squid.  Keep the
-# nullsets so we can see where we looked, and didn't find them
-spring_2016 <- propagateChanges(tblList = spring_2016, keep_nullsets = T)
-
-```
-To then plot the data, you might merge the set location information (i.e. GSINF) with the catch data 
-(i.e. GSCAT) using the MISSION and SETNO fields
-```{r eval=FALSE}
-catches <- merge(spring_2016$GSINF, spring_2016$GSCAT, all.x=T, by=c("MISSION", "SETNO"))
-
-ggplot() + 
-   ggtitle("Spring Survey 2016: Squid")+ 
-   annotation_map(map_data("world"), fill="darkgreen", colour="darkgrey")+
-   geom_point(data=catches[!is.na(catches$TOTNO),], aes(SLONG_DD, SLAT_DD, size = TOTNO), alpha = 2/3)+
-   geom_point(data=catches[is.na(catches$TOTNO),], aes(SLONG_DD, SLAT_DD),  shape=3, size= 1)+ 
-   coord_sf(xlim = c(-71, -63), ylim = c(39.5, 46), expand = FALSE) 
-```
-which yields:
-
-<img src="squid2016.png" width="600" />
-
-Note how "nullsets" are present, and displayed as "+" symbols.
-### WoRMS Aphia IDs
+### TAXA level extractions
 With the addition of [WoRMS aphiaids](https://www.marinespecies.org/about.php) to the species table (i.e. GSSPECIES, it is now possible to filter data at any taxonomic level rather than just discrete species.  
 
 For example, to generate a dataset of only data for polychaetes, one could do the following
@@ -304,119 +121,139 @@ data <- propagateChanges(data, keep_nullsets = F)
 
 ```
 
+### Extracting Survey Data via RVTransmogrify
+Generally, when working with the RV Survey data, only a subset of the 50 years of data is desired for any given analysis.  Whether the interest is a particular survey, a particular species, or a particular area, a number of filtering steps will are generally required.  RVTransmogrifier attempts to make the process a bit easier.  A particular survey is defined by a combination of parameters, including:
+  1. a range of months;
+  2. a particular set of strata; and
+  3. a particular tow 'type' (i.e. a "Stratified random survey set")
+Because getting all of these things correct can be a little difficult, [getSurvey()](https://github.com/PopulationEcologyDivision/RVTransmogrifier/blob/main/R/getSurvey.R) is included to ensure they are applied correctly.  
 
-### Upcoming
-Beyond the existing loading and filtering functions, additional functions are anticipated, including:
+Some common parameters that can be sent to `getSurvey()` include :
 
-* simple summarization of the data
-* scripts for exporting the raw data to formats such as csv
-* simple geospatial visualization of the data
-* scripts for exporting spatialized versions of the data (e.g. sf, shapfiles)
+* "survey" (see table below for how this impacts selection via strata and the time of year of the survey was performed)
+* "years" (1970-present, but some surveys are only available for a subset of this time)
+* "code"/"aphiaid"/"taxa"
+    * "code" - this is the species code found in GSSPECIES (e.g. cod = 10)
+    * "aphiaid" - this is the aphiaid found in GSSPECIES  (e.g. cod = 126436)
+    * "taxa" - any taxonomic identifier found in GSSPECIES (e.g. "TELEOSTEI", "GADIDAE", "GADIFORMES" and "GADUS" would all include cod)
 
-## Reformatting Data
+| PARAMETER        | Months           | Strata  |
+|----------|:-------------:|:-------------------------------:|
+| SUMMER          | months 5:8      | "440", "441", "442", "443", "444", "445", "446", "447", "448", "449", "450", "451", "452", "453", "454", "455", "456", "457", "458", "459", "460", "461", "462", "463", "464", "465", "466", "470", "471", "472", "473", "474", "475", "476", "477", "478", "480", "481", "482", "483", "484", "485", "490", "491", "492", "493", "494", "495" |
+| SUMMER_ALL      | months 5:8      | "434", "436", "437", "438", "439", "440", "441", "442", "443", "444", "445", "446", "447", "448", "449", "450", "451", "452", "453", "454", "455", "456", "457", "458", "459", "460", "461",  "462", "463", "464", "465", "466", "470", "471", "472", "473", "474", "475", "476", "477", "478", "480", "481", "482", "483", "484", "485", "490", "491", "492", "493", "494", "495", "496", "497", "498", "501", "502", "503", "504",  "505", "557", "558", "559", "5Z1", "5Z2", "5Z3", "5Z4", "5Z5", "5Z6", "5Z7","5Z8", "5Z9" |
+| GEORGES         | months 1:4      | "5Z1", "5Z2", "5Z3", "5Z4", "5Z5", "5Z6", "5Z7", "5Z8", "5Z9" |
+| SPRING          | months 1:4      | "396","397", "398", "399", "400", "401", "402", "403", "404", "405", "406", "407", "408", "409", "410", "411", "551", "552", "553", "554", "555", "556", "557", "558", "559" |
+| FALL            | months 9:12     |   <any> |
+| 4VSW            | months 1:4      |  "396","397", "398", "399", "400", "401", "402", "403", "404", "405", "406", "407", "408", "409", "410", "411" |
+
+Below is an example of using RVTransmogrify to extract the same Summer 2016 survey data.  `getSurvey()` results in a single list object that contains all of the individual data objects the survey.
+
+```{r extract-2016-transmogrified}
+cod_2016_transmogrified <- getSurvey("SUMMER_ALL", years = 2016, code=10)
+#nrow(cod_2016_transmogrified$GSINF)
+nrow(cod_2016_transmogrified$dataDETS)
+```
+
+If we look at the number of rows remaining from each filtering method, we can see they're the same:
+```{r manual-filtering, echo=FALSE, collapse=TRUE}
+message("manual filtering")
+print(paste0("GSMISSIONS:", nrow(GSMISSIONS)))
+print(paste0("GSINF:", nrow(GSINF)))
+print(paste0("GSCAT:", nrow(GSCAT)))
+print(paste0("dataDETS:", nrow(dataDETS)))
+
+message("RVTransmogrifier filtering")
+paste(paste0("cod_2016_transmogrified$GSMISSIONS:",nrow(cod_2016_transmogrified$GSMISSIONS)))
+paste(paste0("cod_2016_transmogrified$GSINF:",nrow(cod_2016_transmogrified$GSINF)))
+paste(paste0("cod_2016_transmogrified$GSCAT:",nrow(cod_2016_transmogrified$GSCAT)))
+paste(paste0("cod_2016_transmogrified$dataDETS:",nrow(cod_2016_transmogrified$dataDETS)))
+```
+
+## Plotting Survey Data
+### Plotting Manually
+In order to plot the manually extracted data, we must associate the Catch data (i.e. GSCAT) with the set location data (i.e. GSINF)
+```{r manual-figures, fig.width = 10}
+cod_2016_wrangled <- merge(GSCAT, GSINF, all.y=T, by=c("MISSION", "SETNO"))
+codPlot <-  ggplot2::ggplot()
+# add cod data
+codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD, size=TOTWGT), colour="blue")
+#add nullsets
+codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[is.na(cod_2016_wrangled$TOTWGT),], aes(x = SLONG_DD, y=SLAT_DD), shape = 3, colour="black", size = 2)
+# add some land
+codPlot <- codPlot + ggplot2::geom_polygon(data = RVSurveyData::maritimesLand, ggplot2::aes(x = long, y = lat, group = group), fill = "darkgrey", color = NA) 
+# set the extent of the plot using the data
+limits<- c(range(cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),"SLONG_DD"]),range(cod_2016_wrangled[!is.na(cod_2016_wrangled$TOTWGT),"SLAT_DD"]))
+codPlot <- codPlot + ggplot2::coord_sf(xlim = c(limits[1],limits[2]), ylim = c(limits[3], limits[4]))
+# pretty up the labels a bit
+codPlot <- codPlot + ggplot2::labs(x="Longitude", y="Latitude", size = "Total Weight (kgs)")
+#show it
+codPlot
+```
+The results above do make a reasonable plot, but they took quite a few steps.  Further, the plotted data included a number of points which shouldn't be used for assessing fish stocks (shown in red, below).
+```{r manual-plots-badpoints, fig.width = 10}
+codPlot <- codPlot + ggplot2::geom_point(data=cod_2016_wrangled[cod_2016_wrangled$TYPE!=1,], aes(x = SLONG_DD, y=SLAT_DD), shape = 4, colour="red", size = 4)
+codPlot
+```
+
+### Plotting via RVTransmogrifier
+RVTransmogrifier reduces the steps above significantly. Generating a plot of the same cod data is made easier through the `plotRV()` function.  Additionally, the plot is a bit more polished and can include bathymetry:
+```{r transmogrified-cod, collapse = TRUE, fig.width = 10,  warning=FALSE}
+cod_2016_transmogrified <- getSurvey("SUMMER", years = 2016, code=10) 
+codPlot_transmogrified <- plotRV(cod_2016_transmogrified, plotSets = "TOTWGT", plotBathy = "FILL")  
+codPlot_transmogrified
+```
+
+In the example above, we specified that we were only interested in cod (10).  Alternatively, we can extract the data for all species, and leave the species filtering to `plotRV()`.  Doing so makes generating plots for a number of species at once straightforward:
+```{r, fig.width = 10,  warning=FALSE}
+transmogrified_2016 <- getSurvey("SUMMER", years = 2016)  #removed "code=10"
+species <- c(14,42,2550) #, Silver hake/yellowtail flounder/lobster -->
+for (s in species){
+  spPlot <- plotRV(transmogrified_2016, code=s, plotSets = "TOTWGT", plotBathy = "FILL")
+  spPlot
+}
+```
+
+One of the features of RVTransmogrifier is th use of a biological taxa as a mean of data selection.  Below are examples of plotting MALACOSTRACA and MYCTOPHIFORMES, which is an otherwise difficult thing to produce:
+```{r transmogrified-taxa, collapse = TRUE, fig.width = 10,  warning=FALSE}
+taxa_2019_2020_transmogrified <- getSurvey("SUMMER", years = c(2019,2020), taxa=c("MALACOSTRACA", "MYCTOPHIFORMES")) 
+MALACOSTRACA_2019_2020_transmogrified <- plotRV(taxa_2019_2020_transmogrified, taxa = "MALACOSTRACA", plotSets = "TOTNO", plotBathy = "FILL") 
+MYCTOPHIFORMES_2019_2020_transmogrified <- plotRV(taxa_2019_2020_transmogrified, taxa = "MYCTOPHIFORMES", plotSets = "TOTNO", plotBathy = "FILL")  
+
+MALACOSTRACA_2019_2020_transmogrified
+MYCTOPHIFORMES_2019_2020_transmogrified
+
+```
+
+## Generating Data Products
 The primary impetus of this package was to address the need to provide versions of this data to multiple parties. 
 
-#### FGP/Open Data
-[extractFGP.R](https://github.com/PopulationEcologyDivision/RVTransmogrifier/blob/main/R/extractFGP.R) can generate dataset associated with each of the 4 [FGP/Open data records for the Maritimes Research Vessel Surveys](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b) is complete.
+### extractFGP - Generating Data for Open Data Canada
+Data from the RV Survey Data dataset exists on [Open Data Canada](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b):
 
-#### OBIS 
-* coming soon (this is currently performed via discrete scripts)
+* [Summer](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/dd481775-53e2-485f-ba3c-f5395d07a4a5)
+* [Spring](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/dd481775-53e2-485f-ba3c-f5395d07a4a5)
+* [Fall](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/73154215-9d65-48ba-9cc3-cdce97b81489)
+* [4VSW](https://open.canada.ca/data/en/dataset/8ddcaeea-b806-4958-a79f-ba9ab645f53b/resource/2613c2f6-412e-48ce-85ae-be5bbd25d0cc)
 
-#### DATRAS
-* coming soon (this is currently performed via the code found [here](https://github.com/Maritimes/CanaDatras), but in the interest of consistency, that code will be edited to use this data set, rather than relying on queries of our internal database)
+With RVTransmogrifier, as new data becomes available, the data products provided to Open Data can now be generated virtually instantly.  The following command will build the shapefiles and csv files for the SUMMER, SPRING, FALL and 4VSW surveys for all years for which data is available for each survey (i.e. varies, but 1970+). 
 
+```{r eval=FALSE}
+extractFGP()
+```
+Additionally, if there is a need to generate Open Data Canada - style datasets for only a subset of year(s) and/or survey(s), it can be accomplished by providing a couple parameters:
+```{r eval=FALSE}
+extractFGP(years = 2021, survey=c("SPRING", "SUMMER"))
+```
 
+### extractOBIS - Generating Data for OBIS Canada (in progress)
+Data from the RV Survey Data dataset also exists on [OBIS](https://obis.org/):
 
+* [Summer](http://ipt.iobis.org/obiscanada/resource?r=maritimes_summer_rv_surveys)
+* [Spring](http://ipt.iobis.org/obiscanada/resource?r=maritimes_spring_rv_surveys)
+* [Fall](http://ipt.iobis.org/obiscanada/resource?r=maritimes_fall_rv_surveys)
+* [4VSW](http://ipt.iobis.org/obiscanada/resource?r=maritimes_4vsw_rv_surveys)
 
+`extractOBIS()` will function virtually identically to `extractFGP()` - facilitating the creation of OBIS-compliant datasets immediately after new survey data has been QC'd.
 
- <!-- The next command shows the names of all the data objects held by the list, and how many records they each have. -->
-
- <!--  plotRV(tblList = SUMMER2016_allSp, code=10, plotNullsets = T, plotSets ="TOTWGT", labelStrata = T) -->
-
-
- <!--  #Cod fun -->
- <!--  #Limit the data to just cod -->
- <!--  SUMMER2016_cod <- getSurvey("SUMMER", code = 10, years = 2020) -->
- <!--  #plot the cod - should be identical to the previous plot -->
- <!--  plotRV(tblList = SUMMER2016_cod, plotNullsets = T, plotSets ="TOTWGT", labelStrata = T) -->
-
- <!--  #generate stratified dataset of cod -->
- <!--  #method 1 - specify cod while running the stratify function on all species -->
- <!--  strat2016_cod_liveFilter  <- stratify(SUMMER2016_allSp, code = 10) -->
- <!--  #method 2 - run the stratify function on an already filtered object -->
- <!--  strat2016_cod_prevFilter  <- stratify(SUMMER2016_cod) -->
-
- <!--  #each of the results above is a list object containing a single item: -->
- <!--  #<result>$`10` (where 10 is the code for cod) -->
- <!--  #they should be identical: -->
- <!--  # > sum(strat2016_cod_liveFilter$`10`$BIOMASS_T) -->
- <!--  # [1] 41264.48326 -->
- <!--  # > sum(strat2016_cod_prevFilter$`10`$BIOMASS_T) -->
- <!--  # [1] 41264.48326 -->
-
- <!--  #instead of set locations, we can also plot any of the columns from the stratified file(s) -->
- <!--  #generated above.  These include: -->
- <!--  # "TOT_WGT", "TOT_NO","MEAN_WGT", "MEAN_NO", "BIOMASS_T","ABUND", "ST_ERR_WGT", "ST_ERR_NO",  -->
- <!--  # "ST_ERR_BIOMASS", "ST_ERR_ABUND" -->
- <!--  plotRV(tblList = SUMMER2016, plotSets ='ALL',  -->
- <!--         catchStrataData = strat2016_cod_liveFilter$`10`, plotCatchStrata = "MEAN_WGT") -->
-
- <!--  strat2016_GADIFORMES  <- stratify(SUMMER2016, taxa = "GADIFORMES") -->
- <!--  plotRV(tblList = SUMMER2016, plotNullsets = T, plotSets =NULL,  -->
- <!--         catchStrataData = strat2016_GADIFORMES$GADIFORMES, plotCatchStrata = "BIOMASS_T") -->
-
- <!--  #simple plot of all Gadiformes - includes: -->
- <!--  # - ARCTIC COD, COD(ATLANTIC), CUSK, FOURBEARD ROCKLING, HADDOCK, LONGFIN HAKE,  -->
- <!--  # - MARLIN-SPIKE GRENADIER, OFF-SHORE HAKE, POLLOCK, SILVER HAKE, SQUIRREL OR RED HAKE,  -->
- <!--  # - THREEBEARD ROCKLING, WHITE HAKE and NEZUMIA -->
- <!--  plotRV(tblList = SUMMER2020, taxa = "GADIFORMES", plotNullsets = T, plotSets ="TOTWGT") -->
- <!--  #simple plot of all Gadiformes -->
- <!--  plotRV(tblList = SUMMER2020, taxa = "ARTHROPODA", plotNullsets = T, plotSets ="TOTWGT") -->
- <!--  plotRV(tblList = SUMMER2020, taxa = "ARTHROPODA", plotNullsets = T, plotSets ="TOTWGT") -->
-
-
- <!--                            #limit the data to only a few different taxa -->
- <!--  test1      <- filterSpecies(SUMMER2021, keep_nullsets = T, taxa = "ECHINODERMATA") -->
-
- <!--  #plot some data -->
- <!--  plotRV(tblList = SUMMER2022, taxa=c("ECHINODERMATA"), plotNullsets = T, plotSets ="TOTNO") -->
-
- <!--  #stratify the data (i.e. bump up values for short tows; bump down longer tows, etc) -->
- <!--  strat2021     <- stratify(SUMMER2021, code = "ECHINODERMATA") -->
-
- <!--  plotRV(tblList = SUMMER2022, taxa=c("ECHINODERMATA"), showNullsets = T, plotSets ="ALL",  -->
- <!--             plotBathy = "LINES", plotCatchStrata = "MEAN_WGT", catchStrataData = strat2021$ECHINODERMATA) -->
-
- <!--  plotRV(plotBathy = "LINES", plotCatchStrata = "MEAN_WGT", catchStrataData = strat2021$ECHINODERMATA) -->
-
-
-
- <!--  testFGP <- extractFGP("SUMMER", years = 2011) -->
- <!--  plotRV(tblList = test, code=10, strataVar = "BIOMASS",showNullsets = T, plotPts = F) -->
- <!--  test<-getSurvey("SUMMER", years = 2010) -->
- <!--  plotRV(tblList = test, code=10, strataVar = "BIOMASS",showNullsets = T, plotPts = F) -->
- <!--  test<-getSurvey("SUMMER", years = 2015) -->
- <!--  plotRV(tblList = test, code=10, strataVar = "BIOMASS",showNullsets = T, plotPts = F) -->
- <!--  test<-getSurvey("SUMMER", years = 2020) -->
- <!--  plotRV(tblList = test, code=10, strataVar = "BIOMASS",showNullsets = T, plotPts = T) -->
-
- <!--  plotRV(tblList = test, FAMILY="GADIDAE", strataVar = "BIOMASS", -->
- <!--         multiSp = T, showNullsets = T, plotPts = T) -->
- <!--  # DecapodPlot <- plotRV(tblList = test, ORDER = "DECAPODA", showNullsets = F) -->
- <!--  #  -->
- <!--  # HaddockPlot <- plotRV(tblList = test, SPECIES = "MELANOGRAMMUS AEGLEFINUS", showNullsets = F) -->
- <!--  #  -->
- <!--  # SquidPlot <- plotRV(tblList = test, ORDER = "OEGOPSIDA", plotVar = "TOTWGT", showNullsets = F) -->
- <!--  # SquidPlot <- plotRV(tblList = test, ORDER = "OEGOPSIDA", plotVar = "TOTWGT", showNullsets = F) -->
- <!--  #  -->
- <!--  # test$GSSPECIES<- test$GSSPECIES[test$GSSPECIES$CODE==11,] -->
-
-
- <!--  # test <- propagateChanges(tblList = test, keep_nullsets = F, quiet=T) -->
-
- <!--  # plotRV(tblList = test, showNullsets = F) -->
-
-
- <!--  # dfNWSets <- NW_sets(tblList = test) -->
- <!--  # dfNWAgg <- NW_strat(tblList = test, dfNWSets=dfNWSets) -->
- <!--  # lengthsData <-calcLengths(tblList = test, dfNWSets=dfNWSets, bySex = F) -->
+### Upcoming - DATRAS
+* Hopefully we can migrate the code from [here](https://github.com/Maritimes/CanaDatras), to build `extractDATRAS()`, but that effort has not yet begun.

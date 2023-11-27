@@ -74,8 +74,9 @@ propagateChanges<-function(tblList = NULL, ...){
     }
     
   }
-  
+
   while (LOOPAGAIN){
+
     precnt = sum(sapply(tblList, NROW))
     tblList$GSINF      <- merge(tblList$GSINF,        unique(tblList$GSCAT[,c("MISSION","SETNO")]), all.x=args$keep_nullsets )
     tblList$GSINF      <- merge(tblList$GSINF,        unique(tblList$GSMISSIONS[,"MISSION",drop=F]))
@@ -94,6 +95,7 @@ propagateChanges<-function(tblList = NULL, ...){
     tblList$GSSEX      <- merge(tblList$GSSEX,      unique(tblList$dataDETS[,"FSEX",drop=F]), by.x="CODE", by.y="FSEX")
     tblList$GSHOWOBT   <- tblList$GSHOWOBT[which(tblList$GSHOWOBT$HOWOBT %in% c(unique(tblList$GSINF$HOWD),unique(tblList$GSINF$HOWS))) ,]
     # if(!args$taxaAgg){
+
     if(!all(c("TAXA_", "TAXARANK_") %in% names(tblList$GSCAT))){
       #this will only be used when no species filtering has been done.  As soon as species filtering 
       #is done, taxa_ and taxarank_ will exist
@@ -115,8 +117,9 @@ propagateChanges<-function(tblList = NULL, ...){
     postcnt = sum(sapply(tblList, NROW))
     
     if(nrow(tblList$GSCAT)==0 | nrow(tblList$GSINF)==0){
-      message("Filtered out all catches and/or sets")
-      return(-1)
+      # message("Filtered out all catches and/or sets")
+      # return(-1)
+      stop("Filtered out all catches and/or sets")
     }
     if(postcnt==precnt) {
       LOOPAGAIN=FALSE
